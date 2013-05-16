@@ -14,7 +14,7 @@
 ## along with Octave; see the file COPYING.  If not, see
 ## <http://www.gnu.org/licenses/>.
 
-## Wurfp3m
+## Wurfrev2
 
 ## Author: Max <Max@MAX-LAPTOP-T60>
 ## Created: 2013-04-05
@@ -28,22 +28,23 @@
 ## Beim Speichern als pdf kommt es zu Fehlern. Hier liegen Fehler bei Octave vor.
 ## Die Ergebnisse werden bisher als richtig angenommen. Oft sind unerwartete Werte das Resultat von Ungenauigkeiten oder der Effekt der
 ## getrennten Betrachtung einer gekoppelten Differentialgleichung.
-## Also on Git
 
 
-function [ dat1,dat2 ] = Wurfp3m(vars)
+function [ dat1,dat2 ] = Wurfp3(vars)
 ## %Variablen und Konstanten bestimmten
-    % printf("Ok, you gave me: %f , %f , %f\n%f, %f , %f, %f and %f\n",vars(1),vars(2),vars(3),vars(4),vars(5),vars(6),vars(7),vars(8));
+    printf("Ok, you gave me: %f , %f , %f\n%f, %f , %f, %f and %f\n",vars(1),vars(2),vars(3),vars(4),vars(5),vars(6),vars(7),vars(8));
 	rhop=2900;																%Dichte des Partikels in kg/qm
     rhop=vars(1);
-	rhog=1.205;																%Dichte des Fluides in kg/qm
+	%rhog=1.205;																%Dichte des Fluides in kg/qm
+    rhog=1000;
 	steps=1000;																%Auflösung der Teilschritte
     steps=vars(5);
 	dp=2E-04;																%Partikeldurchmesser in m
     dp=vars(2);
 	dp=dp.*1E-6;
     dprint=dp.*1E06;														%Umrechnung von dp in Mikrometer
-	eta=1.81E-05; 															%Dyn. Viskosität des Fluides
+	eta=1.81E-05; 															%Dyn. Viskosität von Luft bei 20°C  [Pa*s]
+	eta=1.0E-03;															%Dyn Viskosität von Wasser bei 20°C in [Pa*s]
 	nsc=1;																	%NullStellenCounter - Hilfvariable
 	V=3;																	%Abschussgeschwindigkeit
     V=vars(3);
@@ -58,8 +59,8 @@ function [ dat1,dat2 ] = Wurfp3m(vars)
 	Vy=V.*sin(alpha);														%Berechnung Y-Anteil der Abschussgeschwindigkeit
 	x_0=0;																	%Bereits zurückgelegter Anfangsweg X-Achse
 	y_0=0;																	%Bereits zurückgelegter Anfangsweg Y-Achse
-	%Vx																		%Ausgabe Vx (Kontrolle)
-	%Vy																		%Ausgabe Vy (Kontrolle)
+	Vx																		%Ausgabe Vx (Kontrolle)
+	Vy																		%Ausgabe Vy (Kontrolle)
 	V_0=[Vx,Vy,x_0,y_0];													%Anfangsvektors für gekoppelte DGL
 	Vh=[Vx,x_0];															%Anfangsvektor für ungekoppelte DGL horizontal
 	Vv=[Vy,y_0];															%Anfangsvektor für ungekoppelte DGL vertikal
@@ -90,13 +91,13 @@ function [ dat1,dat2 ] = Wurfp3m(vars)
 	x=linspace(0,duration,steps)';
 	tspan=linspace(0,duration,steps);
 	VTSS=-rhop.*dp.^2.*9.81./18./eta;
-    VTSN=-sqrt(4.*rhop.*dp.*9.81./3./0.44./1.205);
+    VTSN=-sqrt(4.*rhop.*dp.*9.81./3./0.44./rhog);
     
 ## Gekoppelte Bewegungsgleichung lösen	
     odeopt=odeset('MaxStep',10,'InitialStep',1E-06);						    %Konfiguration des ode45-Solvers
     odeopt2=odeset('MaxStep',10,'InitialStep',1E-06,'RelTol',1E-06,'AbsTol',1E-06);
     [ngt,r]=ode45(@Vts,[tspan],V_0,odeopt,rhop,rhog,eta,dp,windx,windy);		%Lösen der Gekoppelten DGL
-    %printf("Gekoppelte DGL fertig \n");
+    printf("Gekoppelte DGL fertig \n");
     nghs=r(:,1);
     nghp=r(:,3);
     ngvs=r(:,2);
@@ -106,7 +107,7 @@ function [ dat1,dat2 ] = Wurfp3m(vars)
     [nuvt,nuvi]=ode45(@Vtsv,[tspan],Vv,odeopt,rhop,rhog,eta,dp);			%Der ganze Verlauf kann mit Vtsneg gerechnet werden, da V_0 negativ ist.
     nuvs=nuvi(:,1);
     nuvp=nuvi(:,2);
-    %printf("Vertikal ungekoppelt fertig \n");
+    printf("Vertikal ungekoppelt fertig \n");
     [nuht,nuhi]=ode45(@Vtsh,[tspan],Vh,odeopt,rhop,rhog,eta,dp);				%Lösen der horizontalen DGL
     nuhs=nuhi(:,1);
     nuhp=nuhi(:,2);
@@ -132,9 +133,9 @@ function [ dat1,dat2 ] = Wurfp3m(vars)
     for i =(0:stepset:duration)
         nwhp(end+1,1)=newtonhp(rhop,eta,dp,Vx,i);
     endfor
-    %size(nwvp)
-    %size(ngt)
-    %size(x)
+    size(nwvp)
+    size(ngt)
+    size(x)
     
     dat1=[x,nghs,nghp,ngvs,ngvp,nuhs,nuhp,nuvs,nuvp,shs,shp,svs,svp,nwhs,nwhp,nwvs,nwvp];
     dat2=[duration,trelax,VTSN,VTSS,nusv];
@@ -282,12 +283,13 @@ endfunction
 			k=(pi()./8).*rhog.*dp.^2;											%Konstanten berechnen
 			c=rhog.*dp./eta;													%Konstanter Teil der Reynoldszahl berechnen
 			m=pi()./6.*rhop.*dp.^3;												%Masse des Partikels berechnen
+            m2=pi()./6.*(rhop-rhog).*dp.^3;                                            %Anteil der Auftriebsmasse
 			## Schiller und Naumann Variante (keine Signum Funktion integriert), bitte Anpassen vor Verwendung.
 			%dy(1) = -((24./(c.*sqrt((y(1).^2)+(y(2).^2)))).*(1+0.15.*(c.*sqrt((y(1).^2)+(y(2).^2))).^0.687)).*k./m.*(sqrt((y(1).^2)+(y(2).^2)).*y(1));
 			%dy(2) = -((24./(c.*sqrt((y(1).^2)+(y(2).^2)))).*(1+0.15.*(c.*sqrt((y(1).^2)+(y(2).^2))).^0.687)).*k./m.*(sqrt((y(1).^2)+(y(2).^2)).*y(2)) -9.81 ;		
 			## Morrison Variante
 			dy(1) = -sign((y(1)+windx)).*((24./(c.*sqrt(((y(1)+windx).^2)+((y(2)+windy).^2))))+(2.6.*((c.*sqrt(((y(1)+windx).^2)+((y(2)+windy).^2)))./5))./(1+((c.*sqrt(((y(1)+windx).^2)+((y(2)+windy).^2)))./5).^1.52)+(0.411.*((c.*sqrt(((y(1)+windx).^2)+((y(2)+windy).^2)))./263000).^-7.94)./(1+((c.*sqrt(((y(1)+windx).^2)+((y(2)+windy).^2)))./263000).^-8)+((c.*sqrt(((y(1)+windx).^2)+((y(2)+windy).^2))).^0.8./461000)).*k.*sqrt(((y(1)+windx).^2)+((y(2)+windy).^2)).*abs(y(1)+windx)./m;
-			dy(2) = -sign((y(2)+windy)).*((24./(c.*sqrt(((y(1)+windx).^2)+((y(2)+windy).^2))))+(2.6.*((c.*sqrt(((y(1)+windx).^2)+((y(2)+windy).^2)))./5))./(1+((c.*sqrt(((y(1)+windx).^2)+((y(2)+windy).^2)))./5).^1.52)+(0.411.*((c.*sqrt(((y(1)+windx).^2)+((y(2)+windy).^2)))./263000).^-7.94)./(1+((c.*sqrt(((y(1)+windx).^2)+((y(2)+windy).^2)))./263000).^-8)+((c.*sqrt(((y(1)+windx).^2)+((y(2)+windy).^2))).^0.8./461000)).*k.*sqrt(((y(1)+windx).^2)+((y(2)+windy).^2)).*abs(y(2)+windy)./m -9.81 + (rhog./rhop.*9.81);
+			dy(2) = -sign((y(2)+windy)).*((24./(c.*sqrt(((y(1)+windx).^2)+((y(2)+windy).^2))))+(2.6.*((c.*sqrt(((y(1)+windx).^2)+((y(2)+windy).^2)))./5))./(1+((c.*sqrt(((y(1)+windx).^2)+((y(2)+windy).^2)))./5).^1.52)+(0.411.*((c.*sqrt(((y(1)+windx).^2)+((y(2)+windy).^2)))./263000).^-7.94)./(1+((c.*sqrt(((y(1)+windx).^2)+((y(2)+windy).^2)))./263000).^-8)+((c.*sqrt(((y(1)+windx).^2)+((y(2)+windy).^2))).^0.8./461000)).*k.*sqrt(((y(1)+windx).^2)+((y(2)+windy).^2)).*abs(y(2)+windy)./m2 -9.81 + (rhog./rhop.*9.81);
 			dy(3) = y(1);
 			dy(4) = y(2);
 			dy= [dy(1);dy(2);dy(3);dy(4)];

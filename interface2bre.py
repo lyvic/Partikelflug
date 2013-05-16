@@ -2,7 +2,7 @@
 # Interface2.py
 """Graphical User Interface for plotting the results
 calculated in the script: Wurfp3.m and Wurf3D.m in Octave -
-Simulation of particle flight"""
+Simulation of particle flight - now on git"""
 
 # importing libraries
 import matplotlib

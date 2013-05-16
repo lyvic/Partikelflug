@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # Calculates.py
-"""Calculations in separate threads for pfcontrolset"""
+"""Calculations in separate threads for pfcontrolset - GIT"""
 
 # importing libraries
 import threading

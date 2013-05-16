@@ -2,7 +2,7 @@
 # manips.py
 """Graphical User Interface for plotting the results
 calculated in the script: Wurfp3.m and Wurf3D.m in Octave -
-Simulation of particle flight"""
+Simulation of particle flight - GIT"""
 
 import time
 import numpy as nm
