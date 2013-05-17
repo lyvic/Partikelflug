@@ -31,12 +31,14 @@
 
 
 function [ dat1,dat2 ] = Wurfp3(vars)
+    %vars(1),vars(2),vars(3),vars(4),vars(5),vars(6),vars(7),vars(8),vars(9),vars(10)
+    %rhop   ,dp     ,V      ,alpha  ,beta   ,steps  ,time   ,windx  ,windy  ,windz
 ## %Variablen und Konstanten bestimmten
     printf("Ok, you gave me: %f , %f , %f\n%f, %f , %f, %f and %f\n",vars(1),vars(2),vars(3),vars(4),vars(5),vars(6),vars(7),vars(8));
 	rhop=2900;																%Dichte des Partikels in kg/qm
     rhop=vars(1);
 	%rhog=1.205;																%Dichte des Fluides in kg/qm
-    rhog=1000;
+    rhog=1.205;
 	steps=1000;																%Auflösung der Teilschritte
     steps=vars(5);
 	dp=2E-04;																%Partikeldurchmesser in m
