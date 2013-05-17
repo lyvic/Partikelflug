@@ -1,2 +1,10 @@
-indeed, here it is
-well, now what?
+Config:
+	Environment:
+	- Windx/y/z
+	- Density
+	- Dyn. Visk.
+	- Gravity
+	
+	Solver:
+	- Precision/Steps
+	- Duration

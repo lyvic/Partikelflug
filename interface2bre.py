@@ -129,13 +129,12 @@ class Controlset(Manips):
             self.parameters.grid(row=3, rowspan=3, column=1, sticky="SWE")
             self.parasingpart = tki.Frame()
             self.paramultpart = tki.Frame()
-            self.para2D = tki.Frame()
-            self.para3D = tki.Frame()
+            self.paraconfig = tki.Frame()
+
             # Add to Notebook
             self.parameters.add(self.parasingpart, text='Single particle')
             self.parameters.add(self.paramultpart, text='Multiple particles')
-            self.parameters.add(self.para2D, text='2D Setup')
-            self.parameters.add(self.para3D, text='3D Setup')
+            self.parameters.add(self.paraconfig, text='Configuration')
             # Creating multiple entry-boxes for the corresponding parameters
             # validation command
             vcmd = (self.parasingpart.register(self.validate),
@@ -158,7 +157,7 @@ class Controlset(Manips):
             # angle turn
             self.angleaent = ttk.Entry(self.parasingpart, validate='key', validatecommand=vcmd, width=10)
             self.angleaent.insert(0, 30)
-            # Run Button 2D
+            # Run Button
             self.RunButton1 = ttk.Button(self.parasingpart, text='Run',
                                          command=self.RunThis2s)
 
@@ -203,7 +202,7 @@ class Controlset(Manips):
             # angle turn
             self.angleaentm = ttk.Entry(self.paramultpart, width=10)
             self.angleaentm.insert(0, '5-50')
-            # Run Button 2D
+            # Run Button
             self.RunButton1m = ttk.Button(self.paramultpart, text='Run',
                                           command=self.RunThis2m)
             # Set, Range, Random options
@@ -259,7 +258,6 @@ class Controlset(Manips):
             self.angleeentm.grid(row=4, column=2, sticky="E")
             self.anglealabm.grid(row=5, column=0, sticky="W")
             self.angleaentm.grid(row=5, column=2, sticky="E")
-            # self.multselpartnum.grid(row=0, column=1, sticky="W")
             self.multselrhop.grid(row=1, column=1, sticky="W")
             self.multseldp.grid(row=2, column=1, sticky="W")
             self.multselvel.grid(row=3, column=1, sticky="W")
@@ -268,88 +266,72 @@ class Controlset(Manips):
             self.RunButton1m.grid(row=6, column=0, sticky="SW")
             self.RunButton1m.bind('<Return>', self.RunThis2m)
 
-            ### 2D Setup
+            ### Configuration
             ## Elements
+            # Environment LabelFrame
+            self.enviframe = ttk.LabelFrame(self.paraconfig, text='Environment')
+            # Solver LabelFrame
+            self.solframe = ttk.LabelFrame(self.paraconfig, text='Solver')
             # Precision
-            self.precent2d = ttk.Entry(self.para2D, validate='key', validatecommand=vcmd, width=10)
-            self.precent2d.insert(0, 500)
+            self.precent = ttk.Entry(self.solframe, validate='key', validatecommand=vcmd, width=10)
+            self.precent.insert(0, 2000)
             # Duration
-            self.durationent2d = ttk.Entry(self.para2D, validate='key', validatecommand=vcmd, width=10)
-            self.durationent2d.insert(0, 0)
+            self.durationent = ttk.Entry(self.solframe, validate='key', validatecommand=vcmd, width=10)
+            self.durationent.insert(0, 0)
+            # Box for Wind entries
+            self.windbox = ttk.Frame(self.enviframe)
             # Wind in X
-            self.windxent2d = ttk.Entry(self.para2D, validate='key', validatecommand=vcmd, width=10)
-            self.windxent2d.insert(0, 0)
+            self.windxent = ttk.Entry(self.windbox, validate='key', validatecommand=vcmd, width=3)
+            self.windxent.insert(0, 0)
             # Wind in Y
-            self.windyent2d = ttk.Entry(self.para2D, validate='key', validatecommand=vcmd, width=10)
-            self.windyent2d.insert(0, 0)
-            # Run Button 2D
-            self.RunButton2d = ttk.Button(self.para2D, text='Run', command=self.RunThis2s)
-
-            # Creating labels next to corresponding entry-boxes
-            self.preclab2d = ttk.Label(self.para2D, text='Precision/Steps')
-            self.durationlab2d = ttk.Label(self.para2D, text='Duration in s')
-            self.windxlab2d = ttk.Label(self.para2D, text='Horizontal wind in m/s')
-            self.windylab2d = ttk.Label(self.para2D, text='Vertical wind in m/s')
-
-            # Positioning
-            self.preclab2d.grid(row=0, column=0, sticky="W")
-            self.precent2d.grid(row=0, column=2, sticky="E")
-            self.durationlab2d.grid(row=1, column=0, sticky="W")
-            self.durationent2d.grid(row=1, column=2, sticky="E")
-            self.windxlab2d.grid(row=2, column=0, sticky="W")
-            self.windxent2d.grid(row=2, column=2, sticky="E")
-            self.windylab2d.grid(row=3, column=0, sticky="W")
-            self.windyent2d.grid(row=3, column=2, sticky="E")
-            self.RunButton2d.grid(row=5, column=0, sticky="SW")
-            self.RunButton2d.bind('<Return>', self.RunThis2s)
-
-            ### 3D Setup
-            ## Elements
-            # Precision
-            self.precent3d = ttk.Entry(self.para3D, validate='key', validatecommand=vcmd, width=10)
-            self.precent3d.insert(0, 500)
-            # Duration
-            self.durationent3d = ttk.Entry(self.para3D, validate='key', validatecommand=vcmd, width=10)
-            self.durationent3d.insert(0, 0)
-            # Wind in X
-            self.windxent3d = ttk.Entry(self.para3D, validate='key', validatecommand=vcmd, width=10)
-            self.windxent3d.insert(0, 0)
-            # Wind in Y
-            self.windyent3d = ttk.Entry(self.para3D, validate='key', validatecommand=vcmd, width=10)
-            self.windyent3d.insert(0, 0)
+            self.windyent = ttk.Entry(self.windbox, validate='key', validatecommand=vcmd, width=3)
+            self.windyent.insert(0, 0)
             # Wind in Z
-            self.windzent3d = ttk.Entry(self.para3D, validate='key', validatecommand=vcmd, width=10)
-            self.windzent3d.insert(0, 0)
-            # Run Button 2D
-            self.RunButton3d = ttk.Button(self.para3D, text='Run', command=self.RunThis2s)
-
+            self.windzent = ttk.Entry(self.windbox, validate='key', validatecommand=vcmd, width=3)
+            self.windzent.insert(0, 0)
+            # Gravitiy
+            self.gravent = ttk.Entry(self.enviframe, validate='key', validatecommand=vcmd, width=10)
+            self.gravent.insert(0, 9.81)
+            # Fluid Density
+            self.fludensent = ttk.Entry(self.enviframe, validate='key', validatecommand=vcmd, width=10)
+            self.fludensent.insert(0, 1.205)
+            # Fluid Viscosity
+            self.fluvisent = ttk.Entry(self.enviframe, validate='key', validatecommand=vcmd, width=10)
+            self.fluvisent.insert(0, 1.81e-5)
             # Creating labels next to corresponding entry-boxes
-            self.preclab3d = ttk.Label(self.para3D, text='Precision/Steps')
-            self.durationlab3d = ttk.Label(self.para3D, text='Duration in s')
-            self.windxlab3d = ttk.Label(self.para3D, text='Horizontal x-wind in m/s')
-            self.windylab3d = ttk.Label(self.para3D, text='Horizontal y-wind in m/s')
-            self.windzlab3d = ttk.Label(self.para3D, text='Vertical z-wind in m/s')
+            self.preclab = ttk.Label(self.solframe, text='Precision/Steps')
+            self.durationlab = ttk.Label(self.solframe, text='Duration in s')
+            self.windlab = ttk.Label(self.enviframe, text='X-Y-Z Wind in m/s')
+            self.gravlab = ttk.Label(self.enviframe, text='Gravity in m/s²')
+            self.fludenslab = ttk.Label(self.enviframe, text='Fluid Density in kg/m³')
+            self.fluvislab = ttk.Label(self.enviframe, text='Fluid Dyn. Visc. in Pa s')
 
             # Positioning
-            self.preclab3d.grid(row=0, column=0, sticky="W")
-            self.precent3d.grid(row=0, column=2, sticky="E")
-            self.durationlab3d.grid(row=1, column=0, sticky="W")
-            self.durationent3d.grid(row=1, column=2, sticky="E")
-            self.windxlab3d.grid(row=2, column=0, sticky="W")
-            self.windxent3d.grid(row=2, column=2, sticky="E")
-            self.windylab3d.grid(row=3, column=0, sticky="W")
-            self.windyent3d.grid(row=3, column=2, sticky="E")
-            self.windzlab3d.grid(row=4, column=0, sticky="W")
-            self.windzent3d.grid(row=4, column=2, sticky="E")
-            self.RunButton3d.grid(row=5, column=0, sticky="SW")
-            self.RunButton3d.bind('<Return>', self.RunThis2s)
+            self.enviframe.grid(row=0, column=0, columnspan=3, sticky="SNEW")
+            self.solframe.grid(row=1, column=0, columnspan=3, sticky="SNEW")
+            self.preclab.grid(row=0, column=0, sticky="W")
+            self.precent.grid(row=0, column=2, sticky="E")
+            self.durationlab.grid(row=1, column=0, sticky="W")
+            self.durationent.grid(row=1, column=2, sticky="E")
+            self.windlab.grid(row=0, column=0, sticky="W")
+            self.windbox.grid(row=0, column=2, sticky="SNEW")
+            self.windxent.grid(row=0, column=0, padx=1, sticky="E")
+            self.windyent.grid(row=0, column=1, padx=1, sticky="E")
+            self.windzent.grid(row=0, column=2, padx=1, sticky="E")
+            self.gravlab.grid(row=1, column=0, sticky="W")
+            self.gravent.grid(row=1, column=2, sticky="E")
+            self.fludenslab.grid(row=2, column=0, sticky="W")
+            self.fludensent.grid(row=2, column=2, sticky="E")
+            self.fluvislab.grid(row=3, column=0, sticky="W")
+            self.fluvisent.grid(row=3, column=2, sticky="E")
 
             ### Control buttons
             # configuring grid
             self.parasingpart.grid_columnconfigure(1, weight=1)
             self.paramultpart.grid_columnconfigure(1, weight=1)
-            self.para2D.grid_columnconfigure(1, weight=1)
-            self.para3D.grid_columnconfigure(1, weight=1)
+            self.paraconfig.grid_columnconfigure(1, weight=1)
+            self.enviframe.grid_columnconfigure(1, weight=1)
+            self.solframe.grid_columnconfigure(1, weight=1)
             #self.progressbar.grid(row=6, column=0, sticky="E")
 
             ### Canvas for drawings

@@ -62,10 +62,9 @@ class Manips(object):
             self.zaxisscalet.state(['disabled'])
             self.checknewton.state(['!disabled'])
             self.checkstokes.state(['!disabled'])
+            self.windyent.state(['disabled'])
             self.drawselectmview.grid_forget()
             self.drawselectm.grid(row=0, column=0, columnspan=2, sticky="NSWE")
-            self.parameters.add(self.para2D)
-            self.parameters.hide(self.para3D)
         else:
         # Turn 3D on
             self.set3dstatevar = 1
@@ -75,11 +74,10 @@ class Manips(object):
             self.zaxisscalet.state(['!disabled'])
             self.checknewton.state(['disabled'])
             self.checkstokes.state(['disabled'])
+            self.windyent.state(['!disabled'])
             self.drawselectmview.grid(row=0, column=0,
                                       columnspan=2, sticky="NSWE")
             self.drawselectm.grid_forget()
-            self.parameters.add(self.para3D)
-            self.parameters.hide(self.para2D)
 
     def ClickClose(self, event):
         """Calls ClickClose2. The event type will be ignored"""
@@ -595,7 +593,7 @@ class Manips(object):
                  validation_type, trigger_type, widget_name):
         #print "Yes, I saw you"
         print text
-        if text in '0123456789.-+':
+        if text in 'e0123456789.-+':
             return True
         else:
             try:
