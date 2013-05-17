@@ -29,7 +29,7 @@ def multipcalc(data, mode='2d'):
 def calculate_m(indata):
     print 'Reading values and calling Octave'
     [CalculateN.y, CalculateN.y2] = \
-        oc.call('Wurfp3m.m', [indata],
+        oc.call('Wurfp3.m', [indata],
                 verbose=False)
     print 'Done! Data from Octave available'
     return [CalculateN.y, CalculateN.y2]
@@ -48,7 +48,7 @@ class Manips(object):
     """docstring for Manips"""
     def __init__(self, guest):
         self.guest = guest
-        self.currentdata = 0  
+        self.currentdata = 0
         # [0=No Data; 1=2D single, 2=3D single, 3=2D multi, 4=3D multi]
         pass
 
@@ -115,10 +115,10 @@ class Manips(object):
             if self.set3dstatevar == 0:
                 self.currentdata = 1
                 self.e4 = float(self.angleeent.get())
-                self.e5 = float(self.precent2d.get())
-                self.e6 = float(self.durationent2d.get())
-                self.e7 = float(self.windxent2d.get())
-                self.e8 = float(self.windyent2d.get())
+                self.e5 = float(self.precent.get())
+                self.e6 = float(self.durationent.get())
+                self.e7 = float(self.windxent.get())
+                self.e8 = float(self.windyent.get())
 
                 # Inform user about the configuration.
                 self.entries = "Density: %.2f kg/m³ \n"\
@@ -134,11 +134,11 @@ class Manips(object):
                 self.currentdata = 2
                 self.e4 = float(self.angleeent.get())
                 self.e5 = float(self.angleaent.get())
-                self.e6 = float(self.precent3d.get())
-                self.e7 = float(self.durationent3d.get())
-                self.e8 = float(self.windxent3d.get())
-                self.e9 = float(self.windyent3d.get())
-                self.e10 = float(self.windzent3d.get())
+                self.e6 = float(self.precent.get())
+                self.e7 = float(self.durationent.get())
+                self.e8 = float(self.windxent.get())
+                self.e9 = float(self.windyent.get())
+                self.e10 = float(self.windzent.get())
 
                 # Inform user about the configuration.
                 self.entries = "Density: %.2f kg/m³ \n"\
@@ -201,10 +201,10 @@ class Manips(object):
                 self.ingen(self.multpartslcanglee.get(), self.e4r)
             if self.set3dstatevar == 0:
                 self.currentdata = 3
-                self.e5 = float(self.precent2d.get())
-                self.e6 = float(self.durationent2d.get())
-                self.e7 = float(self.windxent2d.get())
-                self.e8 = float(self.windyent2d.get())
+                self.e5 = float(self.precent.get())
+                self.e6 = float(self.durationent.get())
+                self.e7 = float(self.windxent.get())
+                self.e8 = float(self.windyent.get())
                 # Inform user about the configuration.
                 self.entries = "Density: %.2f to %.2f kg/m³ \n"\
                                "Particle size: %.2f to %.2f µm\n" \
@@ -223,11 +223,11 @@ class Manips(object):
                 self.e5r = tuple(map(float, self.angleaentm.get().split('-')))
                 self.e5 = \
                     self.ingen(self.multpartslcanglea.get(), self.e5r)
-                self.e6 = float(self.precent3d.get())
-                self.e7 = float(self.durationent3d.get())
-                self.e8 = float(self.windxent3d.get())
-                self.e9 = float(self.windyent3d.get())
-                self.e10 = float(self.windzent3d.get())
+                self.e6 = float(self.precent.get())
+                self.e7 = float(self.durationent.get())
+                self.e8 = float(self.windxent.get())
+                self.e9 = float(self.windyent.get())
+                self.e10 = float(self.windzent.get())
                 # Inform user about the configuration.
                 self.entries = "Density: %.2f to %.2f kg/m³ \n"\
                                "Particle size: %.2f to %.2f µm\n" \

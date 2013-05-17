@@ -33,12 +33,12 @@
 
 function [ dat1,dat2 ] = Wurf3D(vars)
 ## Variablen und Konstanten bestimmten
-    printf("Ok, you gave me: %f , %f , %f\n%f, %f, %f and %f\n"
-    ,vars(1),vars(2),vars(3),vars(4),vars(5),vars(6),vars(7),vars(8),vars(9),vars(10));
-    %rhop   ,dp     ,V      ,alpha  ,beta   ,steps  ,time   ,windx  ,windy  ,windz
+    %vars(1),vars(2),vars(3),vars(4),vars(5),vars(6),vars(7),vars(8),vars(9),vars(10),vars(11),vars(12),vars(13)
+    %rhop   ,dp     ,V      ,alpha  ,beta   ,steps  ,time   ,windx  ,windy  ,windz   ,rhog    ,eta     ,grav
 	rhop=2900;																%Dichte des Partikels in kg/qm
     rhop=vars(1);
 	rhog=1.205;																%Dichte des Fluides in kg/qm
+	rhog=vars(11);
 	steps=1000;																%Auflösung der Teilschritte
     steps=vars(6);
 	dp=2E-04;																%Partikeldurchmesser in m
@@ -46,7 +46,9 @@ function [ dat1,dat2 ] = Wurf3D(vars)
 	dp=dp.*1E-6;
     dprint=dp.*1E06;														%Umrechnung von dp in Mikrometer
 	eta=1.81E-05; 															%Dyn. Viskosität des Fluides
+	eta=vars(12);
 	grav=9.81;																%Gravitation Erde
+	grav=vars(13);
 	nsc=1;																	%NullStellenCounter - Hilfvariable
 	V=3;																	%Abschussgeschwindigkeit
     V=vars(3);

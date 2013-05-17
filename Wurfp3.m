@@ -31,14 +31,14 @@
 
 
 function [ dat1,dat2 ] = Wurfp3(vars)
-    %vars(1),vars(2),vars(3),vars(4),vars(5),vars(6),vars(7),vars(8),vars(9),vars(10)
-    %rhop   ,dp     ,V      ,alpha  ,beta   ,steps  ,time   ,windx  ,windy  ,windz
-## %Variablen und Konstanten bestimmten
-    printf("Ok, you gave me: %f , %f , %f\n%f, %f , %f, %f and %f\n",vars(1),vars(2),vars(3),vars(4),vars(5),vars(6),vars(7),vars(8));
+## Variablen und Konstanten bestimmten
+	%vars(1),vars(2),vars(3),vars(4),vars(5),vars(6),vars(7),vars(8),vars(9),vars(10),vars(11)
+	% rhop  ,dp     ,V      ,alpha  ,steps  ,durat  ,windx  ,windy  ,rhog   ,eta     ,grav
 	rhop=2900;																%Dichte des Partikels in kg/qm
     rhop=vars(1);
 	%rhog=1.205;																%Dichte des Fluides in kg/qm
     rhog=1.205;
+	%rhog=vars(9);
 	steps=1000;																%Auflösung der Teilschritte
     steps=vars(5);
 	dp=2E-04;																%Partikeldurchmesser in m
@@ -46,9 +46,9 @@ function [ dat1,dat2 ] = Wurfp3(vars)
 	dp=dp.*1E-6;
     dprint=dp.*1E06;														%Umrechnung von dp in Mikrometer
 	eta=1.81E-05; 															%Dyn. Viskosität Luft 20°C
-	eta=1.0E-03;															%Dyn. Viskosität Wasser 20°C
+	%eta=vars(10);															%Dyn. Viskosität Wasser 20°C
 	grav=9.81;																%Graviation Erde
-    grav=1.622;																%Graviation Mond
+    %grav=vars(11);																%Graviation Mond
 	nsc=1;																	%NullStellenCounter - Hilfvariable
 	V=3;																	%Abschussgeschwindigkeit
     V=vars(3);

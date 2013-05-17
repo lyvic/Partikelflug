@@ -141,7 +141,7 @@ class Calculate(threading.Thread):
         [Calculate.y, Calculate.y2] = \
             oc.call('Wurfp3.m', [self.rhop, self.dp, self.v,
                     self.angle, self.prec, self.duration,
-                    self.windx, self.windy], verbose=False)
+                    self.windx, self.windy], verbose=True)
         print 'Done! Data from Octave available'
         #Delete old plots
         self.guest.myplot(0, self.y[:, 0], self.y[:, 1], 'Time in [s]',
