@@ -32,7 +32,7 @@
 
 function [ dat1,dat2 ] = Wurfp3(vars)
 ## Variablen und Konstanten bestimmten
-	%vars(1),vars(2),vars(3),vars(4),vars(5),vars(6),vars(7),vars(8),vars(9),vars(10),vars(11)
+	%vars(1),vars(2),vars(3),vars(4),vars(5),vars(6),vars(7),vars(8),vars(9),vars(10),vars(11).
 	% rhop  ,dp     ,V      ,alpha  ,steps  ,durat  ,windx  ,windy  ,rhog   ,eta     ,grav
 	rhop=2900;																%Dichte des Partikels in kg/qm
     rhop=vars(1);

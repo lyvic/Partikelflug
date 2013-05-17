@@ -33,7 +33,7 @@
 
 function [ dat1,dat2 ] = Wurf3D(vars)
 ## Variablen und Konstanten bestimmten
-    %vars(1),vars(2),vars(3),vars(4),vars(5),vars(6),vars(7),vars(8),vars(9),vars(10),vars(11),vars(12),vars(13)
+    %vars(1),vars(2),vars(3),vars(4),vars(5),vars(6),vars(7),vars(8),vars(9),vars(10),vars(11),vars(12),vars(13).
     %rhop   ,dp     ,V      ,alpha  ,beta   ,steps  ,time   ,windx  ,windy  ,windz   ,rhog    ,eta     ,grav
 	rhop=2900;																%Dichte des Partikels in kg/qm
     rhop=vars(1);
