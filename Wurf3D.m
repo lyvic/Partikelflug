@@ -14,7 +14,7 @@
 ## along with Octave; see the file COPYING.  If not, see
 ## <http://www.gnu.org/licenses/>.
 
-## Wurfrev2
+## Wurf3D
 
 ## Author: Max <Max@MAX-LAPTOP-T60>
 ## Created: 2013-04-05
@@ -46,6 +46,7 @@ function [ dat1,dat2 ] = Wurf3D(vars)
 	dp=dp.*1E-6;
     dprint=dp.*1E06;														%Umrechnung von dp in Mikrometer
 	eta=1.81E-05; 															%Dyn. Viskosität des Fluides
+	grav=9.81;																%Gravitation Erde
 	nsc=1;																	%NullStellenCounter - Hilfvariable
 	V=3;																	%Abschussgeschwindigkeit
     V=vars(3);
@@ -82,8 +83,8 @@ function [ dat1,dat2 ] = Wurf3D(vars)
         recduration=20.*trelax;
         if(duration>60)
             if(Vy>0)
-                VTSN= sqrt(4.*rhop.*dp.*9.81./3./0.44./1.205);							%VTS nach Newton
-                tu= atan(Vy./VTSN).*VTSN./9.81;										%Umkehrpunkt berechnen
+                VTSN= sqrt(4.*rhop.*dp.*grav./3./0.44./rhog);							%VTS nach Newton
+                tu= atan(Vy./VTSN).*VTSN./grav;										%Umkehrpunkt berechnen
                 duration=tu.*10;
             else
                 duration=60;
@@ -97,13 +98,13 @@ function [ dat1,dat2 ] = Wurf3D(vars)
 	stepset=duration./(steps-1);
 	x=linspace(0,duration,steps)';
 	tspan=linspace(0,duration,steps);
-	VTSS=-rhop.*dp.^2.*9.81./18./eta;
-    VTSN=-sqrt(4.*rhop.*dp.*9.81./3./0.44./1.205);
+	VTSS=-rhop.*dp.^2.*grav./18./eta;
+    VTSN=-sqrt(4.*rhop.*dp.*grav./3./0.44./rhog);
     
 ## Gekoppelte Bewegungsgleichung lösen	
     odeopt=odeset('MaxStep',10,'InitialStep',1E-06);						    %Konfiguration des ode45-Solvers
     odeopt2=odeset('MaxStep',10,'InitialStep',1E-06,'RelTol',1E-06,'AbsTol',1E-06);
-    [ngt,r]=ode45(@Vts3D,[tspan],V_0,odeopt,rhop,rhog,eta,dp,windx,windy,windz);		%Lösen der Gekoppelten DGL
+    [ngt,r]=ode45(@Vts3D,[tspan],V_0,odeopt,rhop,rhog,grav,eta,dp,windx,windy,windz);		%Lösen der Gekoppelten DGL
     %    Vx   ;Vy   ;Vz   ;X    ;Y    ;Z
     printf("Gekoppelte DGL fertig \n");
     ngxs=r(:,1);
@@ -112,7 +113,7 @@ function [ dat1,dat2 ] = Wurf3D(vars)
     ngxp=r(:,4);
     ngyp=r(:,5);
     ngzp=r(:,6);
-    [nusvt,nusvi]=ode45(@Vtsv,[0,duration],[1E-08,0],odeopt2,rhop,rhog,eta,dp);
+    [nusvt,nusvi]=ode45(@Vtsv,[0,duration],[1E-08,0],odeopt2,rhop,rhog,grav,eta,dp);
     nusv=nusvi(end,1);
     
     dat1=[ngt,ngxs,ngys,ngzs,ngxp,ngyp,ngzp];
@@ -128,12 +129,12 @@ endfunction
 ##		
 		## Vertikale Bewegung mit Gravitation, für positive Geschwindigkeiten
 		## Ausgabe: Geschwindigkeit dy(1) und Weg dy(2)
-		function 	dy= Vtsv(x,y,rhop,rhog,eta,dp)								%Bew.gl. für positive Geschwindigkeiten, löst Geschwindigkeit und Weg auf
+		function 	dy= Vtsv(x,y,rhop,rhog,grav,eta,dp)								%Bew.gl. für positive Geschwindigkeiten, löst Geschwindigkeit und Weg auf
 			k=(pi()./8).*rhog.*dp.^2;											%Konstanten berechnen
 			c=rhog.*dp./eta;													%Konstanter Teil der Reynoldszahl berechnen
 			m=pi()./6.*rhop.*dp.^3;												%Masse des Partikels berechnen
-			dy(1) = -sign(y(1)).*((24./(c.*abs(y(1))))+(2.6.*(c.*abs(y(1))./5))./(1+(c.*abs(y(1))./5).^1.52)+(0.411.*(c.*abs(y(1))./263000).^-7.94)./(1+(c.*abs(y(1))./263000).^-8)+((c.*abs(y(1))).^0.8./461000)).*k.*abs(y(1)).^2./m - 9.81 + (rhog./rhop.*9.81);
-			%dy(1)=-(24./(c.*y(1))).*(1+0.15.*(c.*y(1)).^0.687).*k.*y(1).^2 ./m - 9.81 ; %alternative Formel nach Schiller und Naumann
+			dy(1) = -sign(y(1)).*((24./(c.*abs(y(1))))+(2.6.*(c.*abs(y(1))./5))./(1+(c.*abs(y(1))./5).^1.52)+(0.411.*(c.*abs(y(1))./263000).^-7.94)./(1+(c.*abs(y(1))./263000).^-8)+((c.*abs(y(1))).^0.8./461000)).*k.*abs(y(1)).^2./m - grav + (rhog./rhop.*grav);
+			%dy(1)=-(24./(c.*y(1))).*(1+0.15.*(c.*y(1)).^0.687).*k.*y(1).^2 ./m - grav ; %alternative Formel nach Schiller und Naumann
 			dy(2) = y(1);
 			dy=[dy(1);dy(2)];
 		endfunction
@@ -141,14 +142,14 @@ endfunction
 	## Gekoppelte DGLs
 		
 		## 
-        function 	dy= Vts3D(x,y,rhop,rhog,eta,dp,windx,windy,windz)
+        function 	dy= Vts3D(x,y,rhop,rhog,grav,eta,dp,windx,windy,windz)
 			k=(pi()./8).*rhog.*dp.^2;											%Konstanten berechnen
 			c=rhog.*dp./eta;													%Konstanter Teil der Reynoldszahl berechnen
 			m=pi()./6.*rhop.*dp.^3;												%Masse des Partikels berechnen
 			## Morrison Variante
 			dy(1) = -sign((y(1)+windx)).*((24./(c.*sqrt(((y(1)+windx).^2)+((y(2)+windy).^2)+((y(3)+windz).^2))))+(2.6.*((c.*sqrt(((y(1)+windx).^2)+((y(2)+windy).^2)+((y(3)+windz).^2)))./5))./(1+((c.*sqrt(((y(1)+windx).^2)+((y(2)+windy).^2)+((y(3)+windz).^2)))./5).^1.52)+(0.411.*((c.*sqrt(((y(1)+windx).^2)+((y(2)+windy).^2)+((y(3)+windz).^2)))./263000).^-7.94)./(1+((c.*sqrt(((y(1)+windx).^2)+((y(2)+windy).^2)+((y(3)+windz).^2)))./263000).^-8)+((c.*sqrt(((y(1)+windx).^2)+((y(2)+windy).^2)+((y(3)+windz).^2))).^0.8./461000)).*k.*sqrt(((y(1)+windx).^2)+((y(2)+windy).^2)+((y(3)+windz).^2)).*abs(y(1)+windx)./m;
 			dy(2) = -sign((y(2)+windy)).*((24./(c.*sqrt(((y(1)+windx).^2)+((y(2)+windy).^2)+((y(3)+windz).^2))))+(2.6.*((c.*sqrt(((y(1)+windx).^2)+((y(2)+windy).^2)+((y(3)+windz).^2)))./5))./(1+((c.*sqrt(((y(1)+windx).^2)+((y(2)+windy).^2)+((y(3)+windz).^2)))./5).^1.52)+(0.411.*((c.*sqrt(((y(1)+windx).^2)+((y(2)+windy).^2)+((y(3)+windz).^2)))./263000).^-7.94)./(1+((c.*sqrt(((y(1)+windx).^2)+((y(2)+windy).^2)+((y(3)+windz).^2)))./263000).^-8)+((c.*sqrt(((y(1)+windx).^2)+((y(2)+windy).^2)+((y(3)+windz).^2))).^0.8./461000)).*k.*sqrt(((y(1)+windx).^2)+((y(2)+windy).^2)+((y(3)+windz).^2)).*abs(y(2)+windy)./m;
-            dy(3) = -sign((y(3)+windz)).*((24./(c.*sqrt(((y(1)+windx).^2)+((y(2)+windy).^2)+((y(3)+windz).^2))))+(2.6.*((c.*sqrt(((y(1)+windx).^2)+((y(2)+windy).^2)+((y(3)+windz).^2)))./5))./(1+((c.*sqrt(((y(1)+windx).^2)+((y(2)+windy).^2)+((y(3)+windz).^2)))./5).^1.52)+(0.411.*((c.*sqrt(((y(1)+windx).^2)+((y(2)+windy).^2)+((y(3)+windz).^2)))./263000).^-7.94)./(1+((c.*sqrt(((y(1)+windx).^2)+((y(2)+windy).^2)+((y(3)+windz).^2)))./263000).^-8)+((c.*sqrt(((y(1)+windx).^2)+((y(2)+windy).^2)+((y(3)+windz).^2))).^0.8./461000)).*k.*sqrt(((y(1)+windx).^2)+((y(2)+windy).^2)+((y(3)+windz).^2)).*abs(y(3)+windz)./m -9.81 + (rhog./rhop.*9.81);
+            dy(3) = -sign((y(3)+windz)).*((24./(c.*sqrt(((y(1)+windx).^2)+((y(2)+windy).^2)+((y(3)+windz).^2))))+(2.6.*((c.*sqrt(((y(1)+windx).^2)+((y(2)+windy).^2)+((y(3)+windz).^2)))./5))./(1+((c.*sqrt(((y(1)+windx).^2)+((y(2)+windy).^2)+((y(3)+windz).^2)))./5).^1.52)+(0.411.*((c.*sqrt(((y(1)+windx).^2)+((y(2)+windy).^2)+((y(3)+windz).^2)))./263000).^-7.94)./(1+((c.*sqrt(((y(1)+windx).^2)+((y(2)+windy).^2)+((y(3)+windz).^2)))./263000).^-8)+((c.*sqrt(((y(1)+windx).^2)+((y(2)+windy).^2)+((y(3)+windz).^2))).^0.8./461000)).*k.*sqrt(((y(1)+windx).^2)+((y(2)+windy).^2)+((y(3)+windz).^2)).*abs(y(3)+windz)./m -grav + (rhog./rhop.*grav);
 			dy(4) = y(1);
 			dy(5) = y(2);
             dy(6) = y(3);
