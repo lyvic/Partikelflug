@@ -18,7 +18,7 @@
 
 ## Author: Max <Max@MAX-LAPTOP-T60>
 ## Created: 2013-04-05
-## Geschrieben für Octave 3.6.1_gcc4.6.2 mit mindestens ode-Packages und Gnuplot
+## Geschrieben für Octave 3.6.1_gcc4.6.2 mit mindestens ode-Packages
 
 ## Das Programm errechnet Geschwindigkeits-Zeit und Weg-Zeit Entwicklungen einer abgeschossenen perfekten Kugel mit Luftreibung
 ## nach Stokes, Newton, numerisch und numerisch gekoppelt. Die Variablen können beliebig angepasst werden.

@@ -1,61 +1,81 @@
 # -*- coding: utf-8 -*-
 # manips.py
-"""Graphical User Interface for plotting the results
-calculated in the script: Wurfp3.m and Wurf3D.m in Octave -
-Simulation of particle flight"""
+"""This file contains all functions and methods we need to process
+the data input from the interface. It does all manipulations necessary.
+The core of any feature should be found here."""
 
-import time
+# Importing modules
 import numpy as nm
 import random
 from oct2py import octave as oc
-from mpl_toolkits.mplot3d import axes3d
+from mpl_toolkits.mplot3d import axes3d  # This moduls is needed!
 import Tkinter as tki
 import multiprocessing
 from pfCalculates import *
 
 
+### The following functions are outside of the manips class
+### Why? I don't really know, but otherwise the multiprocessing doesn't work.
+# Multiparticle calculations
 def multipcalc(data, mode='2d'):
+    # Counting the number of available CPUs in System
     pool_size = multiprocessing.cpu_count()
+    # Creating a pool of processes with the maximal number of CPUs possible
     pool = multiprocessing.Pool(processes=pool_size)
+    # Call the corresponding function depending on 2D or 3D mode
     if mode == '3d':
         results = pool.map_async(calculate_m3d, data).get()
     else:
         results = pool.map_async(calculate_m, data).get()
+    # Properly close and end all processes, once we're done
     pool.close()
     pool.join()
-    # print results
-    # print "Pool is over"
     return results
 
 
+# Function to be called for multiple particles in 2D mode
+# Receives all parameters needed in a list: indata
 def calculate_m(indata):
+    # This might print oddly as we haven't applied any locks
     print 'Reading values and calling Octave'
+    # Calling octave
     [Calculate.y, Calculate.y2] = \
         oc.call('Wurfp3.m', [indata],
-                verbose=False)
+                verbose=False)  # For debugging change to TRUE or use octave
     print 'Done! Data from Octave available'
     return [Calculate.y, Calculate.y2]
 
 
+# Function to be called for multiple particles in 3D mode
+# Receives all parameters needed in a list: indata
 def calculate_m3d(indata):
+    # This might print oddly as there are no locks used
     print 'Reading values and calling Octave'
     [Calculate.y, Calculate.y2] = \
         oc.call('Wurf3D.m', [indata],
-                verbose=False)
+                verbose=False)  # Use octave for debugging, keep on false
     print 'Done! Data from Octave available'
     return [Calculate.y, Calculate.y2]
 
 
+### Manips class. Everything here is basically encapsuled
+### I don't know if I really need this, but so far everything works.
 class Manips(object):
-    """docstring for Manips"""
+    """Functions for manipulations"""
+    # Since we are entering another class and applying the functions
+    # and methods on external Objects, we call these externals 'guest'
+    # This doesn't really make sense to me, but it works so far.
     def __init__(self, guest):
         self.guest = guest
+        # Depending on the current dataset, functions are going to follow
+        # different procedures
         self.currentdata = 0
-        # [0=No Data; 1=2D single, 2=3D single, 3=2D multi, 4=3D multi]
+        # 0=No Data; 1=2D single, 2=3D single, 3=2D multi, 4=3D multi
         pass
 
+    # Change between 2D and 3D mode and enable/disable options
     def set3dstate(self):
-        if self.set3dstatevar == 1:
+        if self.set3dstatevar == 1:  # If 3D Mode is on
         # Turn 3D off
             self.set3dstatevar = 0
             self.set3DButton.configure(text="3D mode is off",
@@ -81,6 +101,7 @@ class Manips(object):
                                       columnspan=2, sticky="NSWE")
             self.drawselectm.grid_forget()
 
+    # Write a message into the info text-field
     def msgboard(self, message):
         self.info.config(state=tki.NORMAL)
         self.info.insert(tki.END, message)
@@ -90,12 +111,16 @@ class Manips(object):
 
     def RunThiss(self, event):
         """Triggers Runthis2, event type will be ignored"""
+        # This comes in handy if someone would like to run the program
+        # just by focusing the button and hitting 'Return'
         self.RunThis2s()
 
     def RunThis2s(self):
         """Reads entries, prints status messages and calls
         the Calculate function in order to do some work"""
         # Read the given values for the variables.
+        # If anything goes wrong here, of of the entries is not a number
+        # or not convertibel to a float.
         try:
             self.rhop = float(self.rhopent.get())
             self.dp = float(self.dpent.get())
@@ -108,8 +133,8 @@ class Manips(object):
             self.grav = float(self.gravent.get())
             self.windx = float(self.windxent.get())
             self.windz = float(self.windzent.get())
-            if self.set3dstatevar == 0:
-                self.currentdata = 1
+            if self.set3dstatevar == 0:  # If 2D Mode
+                self.currentdata = 1  # Current Data is single particle 2D
                 # Inform user about the configuration.
                 self.entries = "Density: %.2f kg/m³ \n"\
                                "Particle size: %.2f µm\n" \
@@ -122,8 +147,9 @@ class Manips(object):
                                % (self.rhop, self.dp, self.v, self.anglee,
                                   self.prec, self.duration, self.grav, self.rhog,
                                   self.windx, self.windz)
-            else:
-                self.currentdata = 2
+            else:  # We are in 3D
+                self.currentdata = 2  # Current Data is single particle 3D
+                # In 3D we have two more options
                 self.anglea = float(self.angleaent.get())
                 self.windy = float(self.windyent.get())
                 # Inform user about the configuration.
@@ -140,24 +166,24 @@ class Manips(object):
                                   self.prec, self.duration,  self.grav, self.rhog,
                                   self.windx, self.windy, self.windz)
 
-        except ValueError:
+        except ValueError:  # If reading the input fields failes
             self.message = "No valid values entered\n"
             self.msgboard(self.message)
             return
-
+        # In case of success, we print the settings to the message board
         self.msgboard(self.entries)
         print 'RunThis2s called'  # Shows in prompt, not in GUI
         # Call Calculate, invokes a new thread in order to keep the
-        # GUI alive while calculating
-        if self.set3dstatevar == 0:
+        # GUI alive while calculating (this would be nice for multiprocessing too)
+        if self.set3dstatevar == 0:  # In 2D Mode
             CL = Calculate(self, self.rhop, self.rhog, self.dp, self.v, self.anglee,
                            self.prec, self.duration, self.eta, self.grav,
                            self.windx, self.windz)
             # Starts the new thread and the actual calculation
             CL.start()
-        else:
+        else:  # In 3D Mode
             CL = Calculate3D(self, self.rhop, self.dp, self.v, self.anglee,
-                             self.anglea, self.prec, self.duration, self.windx, 
+                             self.anglea, self.prec, self.duration, self.windx,
                              self.windy, self.windz, self.rhog, self.eta, self.grav)
             # Starts the new thread and the actual calculation
             CL.start()
@@ -165,8 +191,11 @@ class Manips(object):
     def RunThis2m(self):
         """Reads entries, prints status messages and calls
         the Calculate function in order to do some work"""
-        # Read the given values for the variables.
+        # Same principle as RunThis2s, but with a '-' to split
+        # the entries from each other.
         try:
+            # Creates tuples of two and processes them with self.ingen()
+            # Depending on the mode, we get a set, range or random datainput
             self.rhopraw = tuple(map(float, self.rhopentm.get().split('-')))
             self.rhop = self.ingen(self.multpartslcrhop.get(), self.rhopraw)
             self.dpraw = tuple(map(float, self.dpentm.get().split('-')))
@@ -175,6 +204,7 @@ class Manips(object):
             self.v = self.ingen(self.multpartslcvel.get(), self.vraw)
             self.angleeraw = tuple(map(float, self.angleeentm.get().split('-')))
             self.anglee = self.ingen(self.multpartslcanglee.get(), self.angleeraw)
+            # The following values should rather be fixed and not randomized. 
             self.prec = float(self.precent.get())
             self.duration = float(self.durationent.get())
             self.windx = float(self.windxent.get())
@@ -182,8 +212,8 @@ class Manips(object):
             self.rhog = float(self.rhogent.get())
             self.eta = float(self.etaent.get())
             self.grav = float(self.gravent.get())
-            if self.set3dstatevar == 0:
-                self.currentdata = 3
+            if self.set3dstatevar == 0:  # In 2D Mode
+                self.currentdata = 3  # Multiple particles in 2D
                 # Inform user about the configuration.
                 self.entries = "Density: %.2f to %.2f kg/m³ \n"\
                                "Particle size: %.2f to %.2f µm\n" \
@@ -197,8 +227,9 @@ class Manips(object):
                                   self.dpraw[1], self.vraw[0], self.vraw[1],
                                   self.angleeraw[0], self.angleeraw[1], self.prec,
                                   self.duration, self.windx, self.windz)
-            else:
-                self.currentdata = 4
+            else:  # in 3D Mode
+                self.currentdata = 4  # Multiple particles in 3D
+                # Here we have two more options to read
                 self.anglearaw = tuple(map(float, self.angleaentm.get().split('-')))
                 self.anglea = self.ingen(self.multpartslcanglea.get(), self.anglearaw)
                 self.windy = float(self.windyent.get())
@@ -218,16 +249,16 @@ class Manips(object):
                                   self.anglearaw[1], self.prec, self.duration, self.windx,
                                   self.windy, self.windz)
 
-        except ValueError:
+        except ValueError:  # If reading the values failes
             self.message = "No valid values entered\n"
             self.msgboard(self.message)
             return
-
+        # If our parameters could be set up properly, we can proceed to calling octave
         self.msgboard(self.entries)
         print 'RunThis2m called'
         # Call Calculate, invokes a new thread in order to keep the
         # GUI alive while calculating
-        if self.set3dstatevar == 0:
+        if self.set3dstatevar == 0:  # In 2D Mode
             n = int(self.partnumentm.get())
             self.dataset = []
             for x in range(0, n):
@@ -236,7 +267,7 @@ class Manips(object):
                                     self.anglee[x], self.prec, self.duration,
                                     self.windx, self.windz, self.rhog, self.eta,
                                     self.grav))
-        else:
+        else:  # In 3D Mode (with more options)
             n = int(self.partnumentm.get())
             self.dataset = []
             for x in range(0, n):
@@ -246,34 +277,30 @@ class Manips(object):
                                     self.duration, self.windx, self.windy,
                                     self.windz, self.rhog, self.eta, self.grav))
         # These datasets need to be sent to Octave individually
+        # But first we prepare the canvas for a new drawing
         self.f.clf()
-        if self.set3dstatevar == 1:
+        if self.set3dstatevar == 1:  # In 3D Mode
             self.a = self.f.add_subplot(111, projection='3d')
             self.f.subplots_adjust(bottom=0.05, left=0.05,
                                    right=0.95, top=0.95)
-        else:
+        else:  # In 2D Mode
             self.a = self.f.add_subplot(111)
             self.f.subplots_adjust(bottom=0.11, left=0.11,
                                    right=0.92, top=0.92)
         self.DrawGrid()
         self.a.ticklabel_format(style='sci', scilimits=(0, 0), axis='both')
-        if self.set3dstatevar == 0:
-            self.multires = multipcalc(self.dataset)
-            # print nm.size(self.multires)
-            # print nm.shape(self.multires)
-            # print self.multires[0][:,0]
-            # print self.multires[0][:,1]
+        if self.set3dstatevar == 0:  # In 2D Mode
+            self.multires = multipcalc(self.dataset)  # Processing the Data in octave multicore
+            # Plotting the Data
             self.myplot(0, self.multires[0][0][:, 2], self.multires[0][0][:, 4], 'Time in [s]',
                         'Speed in [m/s]', pttl='Speed-Time-Horizontal')
+            # Adding a line for every dataset
             for i in range(1, int(self.partnumentm.get())):
                 self.a.plot(self.multires[i][0][:, 2], self.multires[i][0][:, 4])
 
-        if self.set3dstatevar == 1:
-            self.multires = multipcalc(self.dataset, mode='3d')
-            # print nm.size(self.multires)
-            # print nm.shape(self.multires)
-            # print self.multires[0][:,0]
-            # print self.multires[0][:,1]
+        if self.set3dstatevar == 1:  # In 3D Mode
+            self.multires = multipcalc(self.dataset, mode='3d') # Calling octave
+            # Plotting the Data
             self.myplot(1, self.multires[0][0][:, 4],
                         self.multires[0][0][:, 5],
                         'XDistance in [m]',
@@ -281,20 +308,25 @@ class Manips(object):
                         zttl='ZHeight in [m]',
                         zdat=self.multires[0][0][:, 6],
                         pttl='Trajectory')
+            # Adding a line for every dataset
             for i in range(1, int(self.partnumentm.get())):
                 self.a.plot(self.multires[i][0][:, 4], self.multires[i][0][:, 5],
                             self.multires[i][0][:, 6])
-
+        # Update the canvas to show the plots
         self.Paper.show()
 
+    # processing the input data to create the different datasets
     def ingen(self, gen_mode, valin):
+        # Number of particle = Number of datasets
         n = int(self.partnumentm.get())
-        # print n
+        # Output matrix
         valout = []
+        # A set is the simple separation of input values by '-'
         if gen_mode == 'Set':
             valout = list(valin)
             print valout
             return valout
+        # For Range, the given interval is split up in equally long sets
         elif gen_mode == 'Range':
             steps = (valin[1]-valin[0])/(n-1)
             valout = [valin[0]]
@@ -302,35 +334,47 @@ class Manips(object):
                 valout.append(valin[0]+steps*x)
             print valout
             return valout
+        # For random, the values are randomly chosen from within the given interval
         elif gen_mode == 'Random':
-            print 'Randoming'
-            print n
             for i in range(1, n+1):
-                print "Creating values "
-                print i
                 valout.append(random.uniform(valin[0], valin[1]))
-            # valout.sort()
             print valout
             return valout
         else:
+        # Otherwise none of the upper options was selected.
+        # There might by nonsense in the option field.
             print "No, nothing happened"
         return
+
+    ### This is a little help in order to understand how to configure the
+    ### different drawing-options:
+    # Return from octave: ng=numerical coupled, nu= numerical, s = stokes, n =newton
+    # h = horizontal, v = vertical, s = speed, p = path:
+    # e.g. nuhp= numerical horizontal path
+    #[x,nghs,nghp,ngvs,ngvp,nuhs,nuhp,nuvs,nuvp,shs,shp,svs,svp,nwhs,nwhp,nwvs,nwvp];
+    #[0  1    2    3    4    5    6    7    8   9   10  11  12  13   14   15   16]
+    # numerical = +4
+    # stokes = +8
+    # newton = +12
+    # dat2=[duration,trelax,VTSN,VTSS,nusv];
+    # Setting up the options in a dictionary
+    # First string: Option as shown in GUI
 
     def redraw(self, event):
         """Forwarding """
         self.redraw2()
 
     def redraw2(self):
-        if self.set3dstatevar == 1:
+        if self.set3dstatevar == 1:  # In 3D Mode
             self.viewin = self.view.get()
-            self.info.config(state=tki.NORMAL)
-            self.viewid = str(self.viewopt[self.viewin])
-            self.info.insert(tki.END, 'View: '+self.viewin+'\n')
-            self.info.yview(tki.END)
-            self.info.config(state=tki.DISABLED)
-            # self.a.elev = self.viewopt[self.viewin][0]
-            # self.a.azim = self.viewopt[self.viewin][1]
-            if self.currentdata == 2:
+            self.msgboard('View: '+self.viewin+'\n')
+            # self.info.config(state=tki.NORMAL)
+            # self.viewid = str(self.viewopt[self.viewin])
+            # self.info.insert(tki.END, 'View: '+self.viewin+'\n')
+            # self.info.yview(tki.END)
+            # self.info.config(state=tki.DISABLED)
+            if self.currentdata == 2:  # If single particle 2D
+                # Plot the corresponding data
                 if self.viewopt[self.viewin][0] == 0:  # means X View
                     self.myplot(0, Calculate3D.y[:, 4], Calculate3D.y[:, 6],
                                 'X Distance in [m]', 'Z Distance in [m]',
@@ -348,7 +392,7 @@ class Manips(object):
                                 'XDistance in [m]', 'YDistance in [m]',
                                 zttl='ZHeight in [m]', zdat=Calculate3D.y[:, 6],
                                 pttl='Trajectory')
-            if self.currentdata == 4:
+            if self.currentdata == 4:  # If multiple particle 3D Mode
                 if self.viewopt[self.viewin][0] == 0:  # means X View
                     self.myplot(0, self.multires[0][0][:, 4], self.multires[0][0][:, 6],
                                 'X Distance in [m]', 'Z Distance in [m]',
@@ -379,26 +423,26 @@ class Manips(object):
                         self.a.plot(self.multires[i][0][:, 4], self.multires[i][0][:, 5],
                                     self.multires[i][0][:, 6])
 
-        else:
+        else:  # We are in 2D Mode
             try:
-                # self.present = Calculate.y
                 self.linesin = self.lines.get()
-                self.info.config(state=tki.NORMAL)
-                self.drawid = str(self.drawopt[self.linesin])
-                self.info.insert(tki.END, 'Drawing: '+self.linesin+'\n')
-                self.info.yview(tki.END)
-                self.info.config(state=tki.DISABLED)
+                self.msgboard('Drawing: '+self.linesin+'\n')
+                # self.info.config(state=tki.NORMAL)
+                # self.drawid = str(self.drawopt[self.linesin])
+                # self.info.insert(tki.END, 'Drawing: '+self.linesin+'\n')
+                # self.info.yview(tki.END)
+                # self.info.config(state=tki.DISABLED)
                 self.plotx = self.drawopt[self.linesin][0]
                 self.ploty = self.drawopt[self.linesin][1]
                 self.titlexax = self.drawopt[self.linesin][2]
                 self.titleyax = self.drawopt[self.linesin][3]
                 self.figtitle = self.linesin
-                if self.currentdata == 1:
+                if self.currentdata == 1:  # Single particle in 2D
                     self.myplot(0, Calculate.y[:, self.plotx],
                                 Calculate.y[:, self.ploty],
                                 self.titlexax, self.titleyax,
                                 pttl=self.figtitle)
-                if self.currentdata == 3:
+                if self.currentdata == 3:  # Multiple particles in 2D
                     self.myplot(0, self.multires[0][0][:, self.plotx],
                                 self.multires[0][0][:, self.ploty], 
                                 self.titlexax, self.titleyax,
@@ -408,13 +452,16 @@ class Manips(object):
                                     self.multires[i][0][:, self.ploty])
 
                 self.Paper.show()
+                # Draw Stokes and Newton if checked
                 if self.chnwvar.get() == 1:
                     self.shownewton2()
                 if self.chstvar.get() == 1:
                     self.showstokes2()
             except AttributeError:
+                # Somebody must have hit the Draw Button without creating any data
                 print "No values for redraw2"
                 pass
+        # Make changes visible
         self.Paper.show()
 
     def shownewton(self, event):
@@ -422,19 +469,21 @@ class Manips(object):
 
     def shownewton2(self):
         try:
-            # self.present = Calculate.y
             self.linesin = self.lines.get()
             self.nwplotx = self.drawopt[self.linesin][0]
+            # This might be hard to understand: The numbers are refering to the indices
+            # of the corresponding datasets. This is hard coded and can be looked up above.
+            # It all depends on what octave returns.
             if self.nwplotx == 2:
                 self.nwplotx = 14
             self.nwploty = self.drawopt[self.linesin][1]+12
             print "running shownewton2"
-            if self.chnwvar.get() == 1:
+            if self.chnwvar.get() == 1:  # If the checkmark is set, draw the line
                 self.newtonline = self.a.plot(Calculate.y[:, self.nwplotx],
                                               Calculate.y[:, self.nwploty],
                                               color='magenta')
                 self.Paper.show()
-            else:
+            else:  # If the checkmark is not set, delete the line
                 try:
                     l = self.newtonline.pop(0)
                     l.remove()
@@ -443,6 +492,7 @@ class Manips(object):
                 except AttributeError or IndexError:
                     self.Paper.show()
         except AttributeError:
+            # This happens if you check the CheckButton without having any data available
             print "No values for newton2"
             pass
 
@@ -451,7 +501,7 @@ class Manips(object):
 
     def showstokes2(self):
         try:
-            # self.present = Calculate.y
+            # Very same priciple as for shownewton2 just above, with different indices of course
             self.linesin = self.lines.get()
             self.stplotx = self.drawopt[self.linesin][0]
             if self.stplotx == 2:
@@ -476,6 +526,7 @@ class Manips(object):
             pass
 
     def DrawGrid(self):
+        """A grid might improve the view"""
         try:
             if self.chdrawgrid.get() == 1:
                 self.a.grid(True)
@@ -489,25 +540,33 @@ class Manips(object):
         self.SetAxis2()
 
     def SetAxis2(self):
+        """Scaling is quite important for a good data interpretation.
+        So I made it very accessible in here"""
         self.viewset = self.view.get()
+        # In 3D Mode Corner View:
         if self.set3dstatevar == 1 and self.viewopt[self.viewset][0] == 35:
-            try:
+            try:  # Reading the input
                 self.x1 = float(self.xaxisscalef.get())
                 self.x2 = float(self.xaxisscalet.get())
                 self.y1 = float(self.yaxisscalef.get())
                 self.y2 = float(self.yaxisscalet.get())
                 self.z1 = float(self.zaxisscalef.get())
                 self.z2 = float(self.zaxisscalet.get())
-                if self.currentdata == 2:
+                if self.currentdata == 2:  # Single Particle 3D mode
+                    # Has to undergo manual clipping as the mplot3D library
+                    # Is not capable enough to properly display the lines
                     xclip, yclip, zclip =\
                         self.manclip(Calculate3D.y[:, 4]*1, Calculate3D.y[:, 5]*1,
                                      Calculate3D.y[:, 6]*1, (self.x1, self.x2),
                                      (self.y1, self.y2),
                                      (self.z1, self.z2))
+                    # plotting processed data
                     self.myplot(1, xclip, yclip, 'XDistance in [m]',
                                 'YDistance in [m]', zttl='ZHeight in [m]',
                                 zdat=zclip, pttl='Trajectory')
-                if self.currentdata == 4:
+                if self.currentdata == 4:  # Multiple Particle 3D
+                    # Has to undergo manual clipping as the mplot3D library
+                    # Is not capable enough to properly display the lines
                     xclip, yclip, zclip =\
                         self.manclip(self.multires[0][0][:, 4]*1,
                                      self.multires[0][0][:, 5]*1,
@@ -515,9 +574,11 @@ class Manips(object):
                                      (self.x1, self.x2),
                                      (self.y1, self.y2),
                                      (self.z1, self.z2))
+                    # plotting processed data
                     self.myplot(1, xclip, yclip, 'XDistance in [m]',
                                 'YDistance in [m]', zttl='ZHeight in [m]',
                                 zdat=zclip, pttl='Trajectory')
+                    # plotting all other lines of the dataset
                     for i in range(1, int(self.partnumentm.get())):
                         xclip, yclip, zclip =\
                             self.manclip(self.multires[i][0][:, 4]*1,
@@ -527,14 +588,16 @@ class Manips(object):
                                          (self.y1, self.y2),
                                          (self.z1, self.z2))
                         self.a.plot(xclip, yclip, zclip)
+                # Finally, set the scale
                 self.a.set_zlim(self.z1, self.z2)
                 self.a.set_xlim(self.x1, self.x2)
                 self.a.set_ylim(self.y1, self.y2)
             except ValueError:
+                # If the values can't be converted to a float
                 print "Something is wrong with the axis fields"
                 pass
-        else:
-            try:
+        else:  # This not 3D Mode and no corner view
+            try:  # then it's simple since we need no manual clipping or anything
                 self.x1 = float(self.xaxisscalef.get())
                 self.x2 = float(self.xaxisscalet.get())
                 self.y1 = float(self.yaxisscalef.get())
@@ -542,6 +605,7 @@ class Manips(object):
                 self.a.set_xlim(self.x1, self.x2)
                 self.a.set_ylim(self.y1, self.y2)
             except ValueError:
+                # Bad input in the axis fields: strings or similar things. 
                 print "Something is wrong with the axis fields"
                 pass
         self.Paper.show()
@@ -549,19 +613,22 @@ class Manips(object):
 
     def validate(self, action, index, value_if_allowed, prior_value, text,
                  validation_type, trigger_type, widget_name):
-        #print "Yes, I saw you"
+        # A little help for some value fields. Only allow certain charakters
         print text
         if text in 'e0123456789.-+':
             return True
         else:
-            try:
+            try:  # The insert method of the entry boxes need this version
                 float(text)
                 return True
             except ValueError:
+                # Bad input
                 return False
 
     def myplot(self, persp3D, xdat, ydat, xttl, yttl,
                zdat=nm.NaN, zttl=nm.NaN, pttl=''):
+        """Plotting can be quite complicated, so I shortened my code by
+        creating these routines for the most common cases"""
         self.f.clf()
         if persp3D == 1:
             self.a = self.f.add_subplot(111, projection='3d')
@@ -580,9 +647,9 @@ class Manips(object):
         self.a.set_title(pttl)
         self.DrawGrid()
         self.a.ticklabel_format(style='sci', scilimits=(0, 0), axis='both')
-        #self.Paper.show()
         return
 
+    # This function is not used yet, might become usefull later
     def myplot_add(self, persp3D, xdat, ydat, zdat=nm.NaN):
         if persp3D == 1:
             self.a.plot(xdat, ydat, zdat)
@@ -592,6 +659,7 @@ class Manips(object):
         self.DrawGrid()
         return
 
+    # Manual clipping for the screwed up view in mplot3D
     def manclip(self, xdat, ydat, zdat, xlim, ylim, zlim):
         #clipping manually
         for i in nm.arange(len(xdat)):

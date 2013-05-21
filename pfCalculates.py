@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # Calculates.py
-"""Calculations in separate threads for pfcontrolset"""
+"""Calculations in separate threads"""
 
 # importing libraries
 import threading
@@ -53,7 +53,6 @@ class Calculate3D(threading.Thread):
                     self.eta, self.grav],
                     verbose=True)
         print 'Done! Data from Octave available - mode 3D'
-        # Delete old data
         self.guest.myplot(1, self.y[:, 4], self.y[:, 5], 'XDistance in [m]',
                           'YDistance in [m]', self.y[:, 6], 'ZHeight in [m]',
                           'Speed-Time-Horizontal')
@@ -151,7 +150,6 @@ class Calculate(threading.Thread):
                     self.windx, self.windy, self.rhog,
                     self.eta, self.grav], verbose=True)
         print 'Done! Data from Octave available'
-        #Delete old plots
         self.guest.myplot(0, self.y[:, 0], self.y[:, 1], 'Time in [s]',
                           'Speed in [m/s]', pttl='Speed-Time-Horizontal')
         self.guest.Paper.show()

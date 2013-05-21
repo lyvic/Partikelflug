@@ -14,11 +14,11 @@
 ## along with Octave; see the file COPYING.  If not, see
 ## <http://www.gnu.org/licenses/>.
 
-## Wurfrev2
+## Wurfp3
 
 ## Author: Max <Max@MAX-LAPTOP-T60>
 ## Created: 2013-04-05
-## Geschrieben für Octave 3.6.1_gcc4.6.2 mit mindestens ode-Packages und Gnuplot
+## Geschrieben für Octave 3.6.1_gcc4.6.2 mit mindestens ode-Packages
 
 ## Das Programm errechnet Geschwindigkeits-Zeit und Weg-Zeit Entwicklungen einer abgeschossenen perfekten Kugel mit Luftreibung
 ## nach Stokes, Newton, numerisch und numerisch gekoppelt. Die Variablen können beliebig angepasst werden.
@@ -78,8 +78,8 @@ function [ dat1,dat2 ] = Wurfp3(vars)
         recduration=20.*trelax;
         if(duration>60)
             if(Vy>0)
-                VTSN= sqrt(4.*rhop.*dp.*grav./3./0.44./rhog);							%VTS nach Newton
-                tu= atan(Vy./VTSN).*VTSN./grav;										%Umkehrpunkt berechnen
+                VTSN= sqrt(4.*rhop.*dp.*grav./3./0.44./rhog);
+                tu= atan(Vy./VTSN).*VTSN./grav;
                 duration=tu.*10;
             else
                 duration=60;
@@ -97,9 +97,9 @@ function [ dat1,dat2 ] = Wurfp3(vars)
     VTSN=-sqrt(4.*rhop.*dp.*grav./3./0.44./rhog);
     
 ## Gekoppelte Bewegungsgleichung lösen	
-    odeopt=odeset('MaxStep',10,'InitialStep',1E-06);						    %Konfiguration des ode45-Solvers
+    odeopt=odeset('MaxStep',10,'InitialStep',1E-06);
     odeopt2=odeset('MaxStep',10,'InitialStep',1E-06,'RelTol',1E-06,'AbsTol',1E-06);
-    [ngt,r]=ode45(@Vts,[tspan],V_0,odeopt,rhop,rhog,grav,eta,dp,windx,windy);		%Lösen der Gekoppelten DGL
+    [ngt,r]=ode45(@Vts,[tspan],V_0,odeopt,rhop,rhog,grav,eta,dp,windx,windy);
     printf("Gekoppelte DGL fertig \n");
     nghs=r(:,1);
     nghp=r(:,3);
@@ -107,19 +107,20 @@ function [ dat1,dat2 ] = Wurfp3(vars)
     ngvp=r(:,4);
     [nusvt,nusvi]=ode45(@Vtsv,[0,duration],[1E-08,0],odeopt2,rhop,rhog,grav,eta,dp);
     nusv=nusvi(end,1);
-    [nuvt,nuvi]=ode45(@Vtsv,[tspan],Vv,odeopt,rhop,rhog,grav,eta,dp);			%Der ganze Verlauf kann mit Vtsneg gerechnet werden, da V_0 negativ ist.
+    [nuvt,nuvi]=ode45(@Vtsv,[tspan],Vv,odeopt,rhop,rhog,grav,eta,dp);
     nuvs=nuvi(:,1);
     nuvp=nuvi(:,2);
     printf("Vertikal ungekoppelt fertig \n");
-    [nuht,nuhi]=ode45(@Vtsh,[tspan],Vh,odeopt,rhop,rhog,eta,dp);				%Lösen der horizontalen DGL
+    [nuht,nuhi]=ode45(@Vtsh,[tspan],Vh,odeopt,rhop,rhog,eta,dp);
     nuhs=nuhi(:,1);
     nuhp=nuhi(:,2);
     printf("Horizontal ungekoppelt fertig \n");
     %Berechnung der klassischen Ergebnisse
-    svs=stokesvs(rhop,grav,eta,dp,Vy,x);										%Stokes Speed Vertikal berechnen
+    svs=stokesvs(rhop,grav,eta,dp,Vy,x);
     nwvs=[];
-	for i = (0:stepset:duration)										%Newton braucht eine for Schleife, da Berechnungen sonst zu Matrixmultiplikationen führen
-		nwvs(end+1,1)=newtonvs(rhop,rhog,grav,eta,dp,Vy,i);							%Weg-Y-Werte nach Newton errechnen
+	%Newton braucht eine for Schleife, da Berechnungen sonst zu Matrixmultiplikationen führen
+	for i = (0:stepset:duration)
+		nwvs(end+1,1)=newtonvs(rhop,rhog,grav,eta,dp,Vy,i);
 	endfor
     svp=stokesvp(rhop,grav,eta,dp,Vy,x);
     nwvp=[];
@@ -193,7 +194,7 @@ endfunction
 	
 	#Newton Wegfunktion
 	function nw=newtonvp (rhop,rhog,grav,eta,dp,V_0,x)
-		VTS= sqrt(4.*rhop.*dp.*grav./3./0.44./rhog);							%VTS nach Newton
+		VTS= sqrt(4.*rhop.*dp.*grav./3./0.44./rhog);						%VTS nach Newton
 		tu= atan(V_0./VTS).*VTS./grav;										%Umkehrpunkt berechnen
 		k=pi()./8.*0.44.*rhog.*dp.^2;										%Konstanten berechnen
 		m=pi()./6.*rhop.*dp.^3;												%Masse berechnen
@@ -222,29 +223,30 @@ endfunction
 	endfunction
 	
 	#Newton Geschwindigkeitsfunktion
-	function nw = newtonvs(rhop,rhog,grav,eta,dp,V_0,x)								%Funktion für Lösungsvektor nach Newton
-		VTS= sqrt(4.*rhop.*dp.*grav./3./0.44./rhog);							%VTS nach Newton
+	function nw = newtonvs(rhop,rhog,grav,eta,dp,V_0,x)						%Funktion für Lösungsvektor nach Newton
+		VTS= sqrt(4.*rhop.*dp.*grav./3./0.44./rhog);						%VTS nach Newton
 		tu= atan(V_0./VTS).*VTS./grav;										%Umkehrpunkt berechnen
 		k=pi()./8.*0.44.*rhog.*dp.^2;										%Konstanten berechnen
 		m=pi()./6.*rhop.*dp.^3;												%Masse berechnen
 		p=2.*k./m.*(VTS);													%Konstante berechnen
 		u1=(2./(V_0./VTS+1))-1;												%Integrationskonstante berechnen
-		if (V_0>0)																%Für Positive Anfangsgeschwindigkeiten
-			if (tu>=x)															%Umkehrpunkt mit Zeitpunkt überprüfen
-				nw = VTS.*tan(-grav.*x./VTS + atan(V_0./VTS));					%Lösung erstellen
+		if (V_0>0)															%Für Positive Anfangsgeschwindigkeiten
+			if (tu>=x)														%Umkehrpunkt mit Zeitpunkt überprüfen
+				nw = VTS.*tan(-grav.*x./VTS + atan(V_0./VTS));				%Lösung erstellen
 			endif
-			if (x>tu)															%Umkehrzeitpunkt überschritten?
-				x=x-tu;															%Umkehrzeitpunkt vom momentanen Zeitpunk abziehen
-				nw = -sqrt(m.*grav./k).*tanh(sqrt(k.*grav./m).*x);				%Lösung erstellen
+			if (x>tu)														%Umkehrzeitpunkt überschritten?
+				x=x-tu;														%Umkehrzeitpunkt vom momentanen Zeitpunk abziehen
+				nw = -sqrt(m.*grav./k).*tanh(sqrt(k.*grav./m).*x);			%Lösung erstellen
 			endif
 		endif
-		if (0>=V_0)																%Für negative Anfangsgeschwindkeiten
-			if (V_0>(-VTS))														%Mit VTS vergleichen,falls VTS noch nicht erreicht
-				t=log((2./((V_0./-(sqrt(m.*grav./k))) +1)) -1)./(-2.*sqrt(k.*grav./m)); %Zeitpunkt errechnen, der der Anfangsgeschwindigkeit entspricht
-				nw = -sqrt(m.*grav./k).*tanh(sqrt(k.*grav./m).*(t+x));			%Lösung erstellen
+		if (0>=V_0)															%Für negative Anfangsgeschwindkeiten
+			if (V_0>(-VTS))													%Mit VTS vergleichen,falls VTS noch nicht erreicht
+				%Zeitpunkt errechnen, der der Anfangsgeschwindigkeit entspricht
+				t=log((2./((V_0./-(sqrt(m.*grav./k))) +1)) -1)./(-2.*sqrt(k.*grav./m)); 
+				nw = -sqrt(m.*grav./k).*tanh(sqrt(k.*grav./m).*(t+x));		%Lösung erstellen
 			else
-				a=p.*x;															%Exponenten erstellen
-				nw = -(VTS-((2.*VTS)./(u1.*(e.^a)+1)));							%Lösung erstellen
+				a=p.*x;														%Exponenten erstellen
+				nw = -(VTS-((2.*VTS)./(u1.*(e.^a)+1)));						%Lösung erstellen
 			endif
 		endif
 	endfunction
@@ -259,20 +261,20 @@ endfunction
 		## Ausgabe: Geschwindigkeit dy(1), Weg dy(2)
 		
 		function 	dy= Vtsh(x,y,rhop,rhog,eta,dp)						
-				k=(pi()./8).*rhog.*dp.^2;										%Konstanten berechnen
-				c=rhog.*dp./eta;												%Konstanter Teil der Reynoldszahl berechnen
-				m=pi()./6.*rhop.*dp.^3;											%Masse des Partikels berechnen
+				k=(pi()./8).*rhog.*dp.^2;									%Konstanten berechnen
+				c=rhog.*dp./eta;											%Konstanter Teil der Reynoldszahl berechnen
+				m=pi()./6.*rhop.*dp.^3;										%Masse des Partikels berechnen
 				dy(1) = -((24./(c.*y(1)))+(2.6.*(c.*y(1)./5))./(1+(c.*y(1)./5).^1.52)+(0.411.*(c.*y(1)./263000).^-7.94)./(1+(c.*y(1)./263000).^-8)+((c.*y(1)).^0.8./461000)).*k.*y(1).^2./m;
-				dy(2) = y(1);													%Geschwindigkeit nochmal integrieren ergibt den Weg
-				dy=[dy(1);dy(2)];												%Lösungen in einer Matrix zurückgeben
+				dy(2) = y(1);												%Geschwindigkeit nochmal integrieren ergibt den Weg
+				dy=[dy(1);dy(2)];											%Lösungen in einer Matrix zurückgeben
 		endfunction
 		
 		## Vertikale Bewegung mit Gravitation, für positive Geschwindigkeiten
 		## Ausgabe: Geschwindigkeit dy(1) und Weg dy(2)
-		function 	dy= Vtsv(x,y,rhop,rhog,grav,eta,dp)								%Bew.gl. für positive Geschwindigkeiten, löst Geschwindigkeit und Weg auf
-			k=(pi()./8).*rhog.*dp.^2;											%Konstanten berechnen
-			c=rhog.*dp./eta;													%Konstanter Teil der Reynoldszahl berechnen
-			m=pi()./6.*rhop.*dp.^3;												%Masse des Partikels berechnen
+		function 	dy= Vtsv(x,y,rhop,rhog,grav,eta,dp)						%Bew.gl. für positive Geschwindigkeiten, löst Geschwindigkeit und Weg auf
+			k=(pi()./8).*rhog.*dp.^2;										%Konstanten berechnen
+			c=rhog.*dp./eta;												%Konstanter Teil der Reynoldszahl berechnen
+			m=pi()./6.*rhop.*dp.^3;											%Masse des Partikels berechnen
 			dy(1) = -sign(y(1)).*((24./(c.*abs(y(1))))+(2.6.*(c.*abs(y(1))./5))./(1+(c.*abs(y(1))./5).^1.52)+(0.411.*(c.*abs(y(1))./263000).^-7.94)./(1+(c.*abs(y(1))./263000).^-8)+((c.*abs(y(1))).^0.8./461000)).*k.*abs(y(1)).^2./m - grav;
 			%dy(1)=-(24./(c.*y(1))).*(1+0.15.*(c.*y(1)).^0.687).*k.*y(1).^2 ./m - 9.81 ; %alternative Formel nach Schiller und Naumann
 			dy(2) = y(1);
@@ -283,10 +285,10 @@ endfunction
 		
 		## 
 		function 	dy= Vts(x,y,rhop,rhog,grav,eta,dp,windx,windy)
-			k=(pi()./8).*rhog.*dp.^2;											%Konstanten berechnen
-			c=rhog.*dp./eta;													%Konstanter Teil der Reynoldszahl berechnen
-			m=pi()./6.*rhop.*dp.^3;												%Masse des Partikels berechnen
-			m2=pi()./6.*rhog.*dp.^3;                                            %Anteil der Auftriebsmasse
+			k=(pi()./8).*rhog.*dp.^2;										%Konstanten berechnen
+			c=rhog.*dp./eta;												%Konstanter Teil der Reynoldszahl berechnen
+			m=pi()./6.*rhop.*dp.^3;											%Masse des Partikels berechnen
+			m2=pi()./6.*rhog.*dp.^3;                                        %Anteil der Auftriebsmasse
 			## Schiller und Naumann Variante (keine Signum Funktion integriert), bitte Anpassen vor Verwendung.
 			%dy(1) = -((24./(c.*sqrt((y(1).^2)+(y(2).^2)))).*(1+0.15.*(c.*sqrt((y(1).^2)+(y(2).^2))).^0.687)).*k./m.*(sqrt((y(1).^2)+(y(2).^2)).*y(1));
 			%dy(2) = -((24./(c.*sqrt((y(1).^2)+(y(2).^2)))).*(1+0.15.*(c.*sqrt((y(1).^2)+(y(2).^2))).^0.687)).*k./m.*(sqrt((y(1).^2)+(y(2).^2)).*y(2)) -grav +(rhog./rhop.*grav) ;		

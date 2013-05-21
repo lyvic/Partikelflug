@@ -1,21 +1,17 @@
 # -*- coding: utf-8 -*-
 # Interface2.py
-"""Graphical User Interface for plotting the results
-calculated in the script: Wurfp3.m and Wurf3D.m in Octave -
-Simulation of particle flight"""
+"""Graphical User Interface
+This creates the bits and buttons for the interface.
+Variables and names are also defined here. This is the
+first layer of change if the program needs to be extended.
+Anything that has to do with layout or appearance might be found here."""
 
 # importing libraries
 import matplotlib
 import ttk
-# import threading
 matplotlib.use('TkAgg')
-#import numpy as nm
-#import decimal as dc
-#import pylab as pl
-#from mpl_toolkits.mplot3d import axes3d
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
 from matplotlib.figure import Figure
-# from oct2py import octave as oc
 import Tkinter as tki
 from pfCalculates import *
 from manips import *
@@ -24,8 +20,7 @@ from manips import *
 class Controlset(Manips):
     """CS - Controlset. This class creates the GUI with all important
     Elements. Major changes and calculations will be executed
-    in the Calculation-Class in a seperate thread. This prevents the
-    GUI from hanging"""
+    in the Calculation-Class"""
     def __init__(self):
         self.buildGUI()
 
@@ -43,24 +38,23 @@ class Controlset(Manips):
             self.main.pack(fill=tki.BOTH, expand=tki.YES)
             # Configure the grid of the mainframe so that only the top left
             # cell grows if the users expands the window.
-            self.main.grid_rowconfigure(0, weight=1)
-            self.main.grid_rowconfigure(1, weight=1)
-            #self.main.grid_rowconfigure(2, weight=1)
-            self.main.grid_columnconfigure(0, weight=1)
-            self.main.grid_columnconfigure(1, weight=0)
+            self.main.grid_rowconfigure(0, weight=1)  # row 0 grows 1:1
+            self.main.grid_rowconfigure(1, weight=1)  # row 1 grows 1:1
+            self.main.grid_columnconfigure(0, weight=1)  # column 0 grow 1:1
+            self.main.grid_columnconfigure(1, weight=0)  # column 1 always stays as is
 
             ### Information display
             # A Frame to put the textbox and its scrollbar in.
-            self.infoframe = tki.Frame(self.main, bg='yellow')
+            self.infoframe = tki.Frame(self.main)  # , bg='yellow')  # Yellow color for debugging
             self.infoframe.grid(row=0, rowspan=2, column=1, sticky=tki.N+tki.S+tki.E+tki.W)
             self.infoframe.grid_columnconfigure(0, weight=1)
             self.infoframe.grid_rowconfigure(0, weight=1)
-            # Creating the Textbox with a fixed width of 20 characters
+            # Creating the Textbox with a fixed width of 50 characters
             self.info = tki.Text(self.infoframe, width=50)
             self.info.grid(row=0, column=0, sticky=tki.N+tki.S+tki.E+tki.W)
             # Creating a scrollbar for the textbox
             self.sbar = ttk.Scrollbar(self.infoframe)
-            # connect the yview command to the scrollbar
+            # Connect the yview command to the scrollbar
             self.sbar.config(command=self.info.yview)
             self.info.config(yscrollcommand=self.sbar.set)
             self.sbar.grid(row=0, column=1, sticky=tki.N+tki.S+tki.E+tki.W)
@@ -107,19 +101,23 @@ class Controlset(Manips):
             self.linesslc = ('Speed-Time-Horizontal', 'Speed-Time-Vertical',
                              'Path-Time-Horizontal', 'Path-Time-Vertical', 'Trajectory')
             self.viewslc = ('Topview', 'View from X', 'View from Y', 'Corner')
+            # Dict for the corresponding options
             self.viewopt = {'Topview': (90, 0),
                             'View from X': (0, 0),
                             'View from Y': (1, 0),
                             'Corner': (35, 215)}
             # Tuple with indeces of relevant columns for the plot, axis labels
+            # Needs to be adapted to octave output! - Dependency!
             self.drawopt = {'Speed-Time-Horizontal': (0, 1, 'Time in [s]', 'Speed in [m/s]'),
                             'Path-Time-Horizontal': (0, 2, 'Time in [s]', 'Distance in [m]'),
                             'Speed-Time-Vertical': (0, 3, 'Time in [s]', 'Speed in [m/s]'),
                             'Path-Time-Vertical': (0, 4, 'Time in [s]', 'Distance in [m]'),
                             'Trajectory': (2, 4, 'Horizontal distance in [m]', 'Vertical distance in [m]')}
             # Creating the actual dropdown-menu and naming the corresponding labels
+            # View version for 3D mode
             self.drawselectmview = ttk.Combobox(self.drawselect, values=self.viewslc, textvariable=self.view)
             self.drawselectmview.grid(row=0, column=0, columnspan=2, sticky="NSWE")
+            # Draw version for 2D mode
             self.drawselectm = ttk.Combobox(self.drawselect, values=self.linesslc, textvariable=self.lines)
             self.drawselectm.grid(row=0, column=0, columnspan=2, sticky="NSWE")
 
@@ -127,6 +125,7 @@ class Controlset(Manips):
             # Wrapping Notebook to set up parameters menus
             self.parameters = ttk.Notebook(self.main)
             self.parameters.grid(row=3, rowspan=3, column=1, sticky="SWE")
+            # Single particle, Multiple particles and config Tab
             self.parasingpart = tki.Frame()
             self.paramultpart = tki.Frame()
             self.paraconfig = tki.Frame()
@@ -135,7 +134,7 @@ class Controlset(Manips):
             self.parameters.add(self.parasingpart, text='Single particle')
             self.parameters.add(self.paramultpart, text='Multiple particles')
             self.parameters.add(self.paraconfig, text='Configuration')
-            # Creating multiple entry-boxes for the corresponding parameters
+
             # validation command
             vcmd = (self.parasingpart.register(self.validate),
                     '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W')
@@ -151,10 +150,10 @@ class Controlset(Manips):
             # velocity
             self.velent = ttk.Entry(self.parasingpart, validate='key', validatecommand=vcmd, width=10)
             self.velent.insert(0, 6)
-            # angle lift
+            # angle elevation
             self.angleeent = ttk.Entry(self.parasingpart, validate='key', validatecommand=vcmd, width=10)
             self.angleeent.insert(0, 35)
-            # angle turn
+            # angle azimut
             self.angleaent = ttk.Entry(self.parasingpart, validate='key', validatecommand=vcmd, width=10)
             self.angleaent.insert(0, 30)
             # Run Button
@@ -168,7 +167,7 @@ class Controlset(Manips):
             self.angleelab = ttk.Label(self.parasingpart, text='Elevation in deg°')
             self.anglealab = ttk.Label(self.parasingpart, text='Azimuth in deg° (3D)')
 
-            # Positioning
+            # Positioning everything in the grid
             self.rhoplab.grid(row=0, column=0, sticky="W")
             self.rhopent.grid(row=0, column=2, sticky="E")
             self.dplab.grid(row=1, column=0, sticky="W")
@@ -207,31 +206,31 @@ class Controlset(Manips):
                                           command=self.RunThis2m)
             # Set, Range, Random options
             self.multselval = ('Set', 'Range', 'Random')
-            #numb
+            # Numb
             self.multpartslcnum = tki.StringVar(self.paramultpart)
             self.multselpartnum = ttk.Combobox(self.paramultpart, values=self.multselval,
                                                textvariable=self.multpartslcnum)
-            #rhop
+            # rhop
             self.multpartslcrhop = tki.StringVar(self.paramultpart)
             self.multselrhop = ttk.Combobox(self.paramultpart, values=self.multselval,
                                             textvariable=self.multpartslcrhop)
             self.multselrhop.set('Range')
-            #dp
+            # dp
             self.multpartslcdp = tki.StringVar(self.paramultpart)
             self.multseldp = ttk.Combobox(self.paramultpart, values=self.multselval,
                                           textvariable=self.multpartslcdp)
             self.multseldp.set('Range')
-            #V
+            # v
             self.multpartslcvel = tki.StringVar(self.paramultpart)
             self.multselvel = ttk.Combobox(self.paramultpart, values=self.multselval,
                                            textvariable=self.multpartslcvel)
             self.multselvel.set('Range')
-            #anglee
+            # anglee
             self.multpartslcanglee = tki.StringVar(self.paramultpart)
             self.multselanglee = ttk.Combobox(self.paramultpart, values=self.multselval,
                                               textvariable=self.multpartslcanglee)
             self.multselanglee.set('Range')
-            #anglea
+            # anglea
             self.multpartslcanglea = tki.StringVar(self.paramultpart)
             self.multselanglea = ttk.Combobox(self.paramultpart, values=self.multselval,
                                               textvariable=self.multpartslcanglea)
@@ -326,7 +325,7 @@ class Controlset(Manips):
             self.etaent.grid(row=3, column=2, sticky="E")
 
             ### Control buttons
-            # configuring grid
+            # Configuring grid
             self.parasingpart.grid_columnconfigure(1, weight=1)
             self.paramultpart.grid_columnconfigure(1, weight=1)
             self.paraconfig.grid_columnconfigure(1, weight=1)
@@ -356,11 +355,10 @@ class Controlset(Manips):
             # A frame containing the axis config-menu
             self.axisscaleframe = tki.Frame(self.main)  # , bg='magenta')
             self.axisscaleframe.grid(row=5, column=0, sticky='SNEW')
-            # In that Frame, some Entry-boxes to specify scale
+            # In that Frame, some Entry-boxes to specify the scale
             self.xaxisscalef = ttk.Entry(self.axisscaleframe, width=10, validate='key', validatecommand=vcmd)
-            # put some standard value in the entry box
-            self.yaxisscalef = ttk.Entry(self.axisscaleframe, width=10, validate='key', validatecommand=vcmd)
             self.xaxisscalet = ttk.Entry(self.axisscaleframe, width=10, validate='key', validatecommand=vcmd)
+            self.yaxisscalef = ttk.Entry(self.axisscaleframe, width=10, validate='key', validatecommand=vcmd)
             self.yaxisscalet = ttk.Entry(self.axisscaleframe, width=10, validate='key', validatecommand=vcmd)
             self.zaxisscalef = ttk.Entry(self.axisscaleframe, width=10, validate='key', validatecommand=vcmd)
             self.zaxisscalet = ttk.Entry(self.axisscaleframe, width=10, validate='key', validatecommand=vcmd)
@@ -388,9 +386,9 @@ class Controlset(Manips):
             self.chdrawgrid.set(1)
             self.checkgrid = ttk.Checkbutton(self.axisscaleframe, text="Show gridlines",
                                              command=self.DrawGrid, variable=self.chdrawgrid)
-            # Run Button 3D
+            # 3D Mode Button
             self.set3DButton = tki.Button(self.axisscaleframe, text="3D mode is off",
-                                          command=self.set3dstate, bg='orange', relief='raised')
+                                          command=self.set3dstate, bg='green', relief='raised')
             # Let's organize all this in the axisscaleframe-grid
             self.axinfolab.grid(row=0, column=0, sticky='W')
             self.xaxlab.grid(row=1, column=0, sticky='W')
@@ -413,4 +411,3 @@ class Controlset(Manips):
 if __name__ == '__main__':
     CS1 = Controlset()
     CS1.mainw.mainloop()
-# CS1.mainloop()
