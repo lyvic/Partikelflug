@@ -86,27 +86,6 @@ class Manips(object):
         self.info.yview(tki.END)
         self.info.config(state=tki.DISABLED)
 
-    def ClickClose(self, event):
-        """Calls ClickClose2. The event type will be ignored"""
-        self.ClickClose2()
-
-    def ClickClose2(self):
-        """Closes the application"""
-        self.ThisParent.quit()
-        self.ThisParent.destroy()
-
-    def Reset(self, event):
-        """Forwards the binding without event information"""
-        self.Reset2()
-
-    def Reset2(self):
-        """This has no use"""
-        print "Not assigned yet"
-        self.info.config(state=tki.NORMAL)
-        self.info.insert(tki.END, "Not assigned yet \n")
-        self.info.yview(tki.END)
-        self.info.config(state=tki.DISABLED)
-
     def RunThiss(self, event):
         """Triggers Runthis2, event type will be ignored"""
         self.RunThis2s()
@@ -186,20 +165,23 @@ class Manips(object):
         the Calculate function in order to do some work"""
         # Read the given values for the variables.
         try:
-            self.e1r = tuple(map(float, self.rhopentm.get().split('-')))
-            self.e1 = self.ingen(self.multpartslcrhop.get(), self.e1r)
-            self.e2r = tuple(map(float, self.dpentm.get().split('-')))
-            self.e2 = self.ingen(self.multpartslcdp.get(), self.e2r)
-            self.e3r = tuple(map(float, self.velentm.get().split('-')))
-            self.e3 = self.ingen(self.multpartslcvel.get(), self.e3r)
-            self.e4r = tuple(map(float, self.angleeentm.get().split('-')))
-            self.e4 = self.ingen(self.multpartslcanglee.get(), self.e4r)
+            self.rhopraw = tuple(map(float, self.rhopentm.get().split('-')))
+            self.rhop = self.ingen(self.multpartslcrhop.get(), self.rhopraw)
+            self.dpraw = tuple(map(float, self.dpentm.get().split('-')))
+            self.dp = self.ingen(self.multpartslcdp.get(), self.dpraw)
+            self.vraw = tuple(map(float, self.velentm.get().split('-')))
+            self.v = self.ingen(self.multpartslcvel.get(), self.vraw)
+            self.angleeraw = tuple(map(float, self.angleeentm.get().split('-')))
+            self.anglee = self.ingen(self.multpartslcanglee.get(), self.angleeraw)
+            self.prec = float(self.precent.get())
+            self.duration = float(self.durationent.get())
+            self.windx = float(self.windxent.get())
+            self.windz = float(self.windzent.get())
+            self.rhog = float(self.rhogent.get())
+            self.eta = float(self.etaent.get())
+            self.grav = float(self.gravent.get())
             if self.set3dstatevar == 0:
                 self.currentdata = 3
-                self.e5 = float(self.precent.get())
-                self.e6 = float(self.durationent.get())
-                self.e7 = float(self.windxent.get())
-                self.e8 = float(self.windyent.get())
                 # Inform user about the configuration.
                 self.entries = "Density: %.2f to %.2f kg/m³ \n"\
                                "Particle size: %.2f to %.2f µm\n" \
@@ -209,20 +191,15 @@ class Manips(object):
                                "Horizontal Wind: %.2f m/s\n"\
                                "Vertical Wind: %.2f m/s\n"\
                                "Calculations running, please wait ... \n" \
-                               % (self.e1r[0], self.e1r[1], self.e2r[0],
-                                  self.e2r[1], self.e3r[0], self.e3r[1],
-                                  self.e4r[0], self.e4r[1], self.e5,
-                                  self.e6, self.e7, self.e8)
+                               % (self.rhopraw[0], self.rhopraw[1], self.dpraw[0],
+                                  self.dpraw[1], self.vraw[0], self.vraw[1],
+                                  self.angleeraw[0], self.angleeraw[1], self.prec,
+                                  self.duration, self.windx, self.windz)
             else:
                 self.currentdata = 4
-                self.e5r = tuple(map(float, self.angleaentm.get().split('-')))
-                self.e5 = \
-                    self.ingen(self.multpartslcanglea.get(), self.e5r)
-                self.e6 = float(self.precent.get())
-                self.e7 = float(self.durationent.get())
-                self.e8 = float(self.windxent.get())
-                self.e9 = float(self.windyent.get())
-                self.e10 = float(self.windzent.get())
+                self.anglearaw = tuple(map(float, self.angleaentm.get().split('-')))
+                self.anglea = self.ingen(self.multpartslcanglea.get(), self.anglearaw)
+                self.windy = float(self.windyent.get())
                 # Inform user about the configuration.
                 self.entries = "Density: %.2f to %.2f kg/m³ \n"\
                                "Particle size: %.2f to %.2f µm\n" \
@@ -233,26 +210,18 @@ class Manips(object):
                                "Wind in X: %.2f m/s\nWind in Y : %.2f m/s\n"\
                                "Wind in Z: %.2f m/s\n"\
                                "Calculations running, please wait ... \n" \
-                               % (self.e1r[0], self.e1r[1], self.e2r[0],
-                                  self.e2r[1], self.e3r[0], self.e3r[1],
-                                  self.e4r[0], self.e4r[1], self.e5r[0],
-                                  self.e5r[1], self.e6, self.e7,
-                                  self.e8, self.e9, self.e10)
+                               % (self.rhopraw[0], self.rhopraw[1], self.dpraw[0],
+                                  self.dpraw[1], self.vraw[0], self.vraw[1],
+                                  self.angleeraw[0], self.angleeraw[1], self.anglearaw[0],
+                                  self.anglearaw[1], self.prec, self.duration, self.windx,
+                                  self.windy, self.windz)
 
         except ValueError:
             self.message = "No valid values entered\n"
-            self.info.config(state=tki.NORMAL)
-            self.info.insert(tki.END, self.message)
-            # Scroll to end of window.
-            self.info.yview(tki.END)
-            self.info.config(state=tki.DISABLED)
+            self.msgboard(self.message)
             return
 
-        self.info.config(state=tki.NORMAL)
-        self.info.insert(tki.END, self.entries)
-        # Scroll to end of window.
-        self.info.yview(tki.END)
-        self.info.config(state=tki.DISABLED)
+        self.msgboard(self.entries)
         print 'RunThis2m called'
         # Call Calculate, invokes a new thread in order to keep the
         # GUI alive while calculating
@@ -261,17 +230,19 @@ class Manips(object):
             self.dataset = []
             for x in range(0, n):
                 print x
-                self.dataset.append((self.e1[x], self.e2[x], self.e3[x],
-                                    self.e4[x], self.e5, self.e6,
-                                    self.e7, self.e8))
+                self.dataset.append((self.rhop[x], self.dp[x], self.v[x],
+                                    self.anglee[x], self.prec, self.duration,
+                                    self.windx, self.windz, self.rhog, self.eta,
+                                    self.grav))
         else:
             n = int(self.partnumentm.get())
             self.dataset = []
             for x in range(0, n):
                 print x
-                self.dataset.append((self.e1[x], self.e2[x], self.e3[x],
-                                    self.e4[x], self.e5[x], self.e6,
-                                    self.e7, self.e8, self.e9, self.e10))
+                self.dataset.append((self.rhop[x], self.dp[x], self.v[x],
+                                    self.anglee[x], self.anglea[x], self.prec,
+                                    self.duration, self.windx, self.windy,
+                                    self.windz, self.rhog, self.eta, self.grav))
         # These datasets need to be sent to Octave individually
         self.f.clf()
         if self.set3dstatevar == 1:
@@ -313,16 +284,6 @@ class Manips(object):
                             self.multires[i][0][:, 6])
 
         self.Paper.show()
-        # self.octdata = self.calculate_m(self, self.dataset[0])
-        # print self.octdata
-        # print __name__
-        # print self.dataset
-        # pool_size = multiprocessing.cpu_count()
-        # print pool_size
-        # pool = multiprocessing.Pool(processes=pool_size)
-        # results = pool.map_async(calculate_m, self.dataset).get()
-        # print results
-        # print "Pool is over"
 
     def ingen(self, gen_mode, valin):
         n = int(self.partnumentm.get())
