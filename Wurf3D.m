@@ -34,7 +34,7 @@
 function [ dat1,dat2 ] = Wurf3D(vars)
 ## Variablen und Konstanten bestimmten
     %vars(1),vars(2),vars(3),vars(4),vars(5),vars(6),vars(7),vars(8),vars(9),vars(10),vars(11),vars(12),vars(13).
-    %rhop   ,dp     ,V      ,alpha  ,beta   ,steps  ,time   ,windx  ,windy  ,windz   ,rhog    ,eta     ,grav
+    %rhop   ,dp     ,V      ,elev   ,azim   ,steps  ,time   ,windx  ,windy  ,windz   ,rhog    ,eta     ,grav
 	rhop=2900;																%Dichte des Partikels in kg/qm
     rhop=vars(1);
 	rhog=1.205;																%Dichte des Fluides in kg/qm
@@ -64,8 +64,8 @@ function [ dat1,dat2 ] = Wurf3D(vars)
     windz=vars(10);
 	alpha=anglealpha.*(pi()./180);											%Umrechnung Winkel in Bogenmaß
     beta=anglebeta.*(pi()./180);                                            %Umrechnung in Bogenmaß
-	Vx=V.*cos(alpha).*cos(beta);														%Berechnung X-Anteil der Abschussgeschwindigkeit
-	Vy=V.*cos(alpha).*sin(beta);														%Berechnung Y-Anteil der Abschussgeschwindigkeit
+	Vx=V.*cos(alpha).*cos(beta);											%Berechnung X-Anteil der Abschussgeschwindigkeit
+	Vy=V.*cos(alpha).*sin(beta);											%Berechnung Y-Anteil der Abschussgeschwindigkeit
     Vz=V.*sin(alpha);
 	x_0=0;																	%Bereits zurückgelegter Anfangsweg X-Achse
 	y_0=0;																	%Bereits zurückgelegter Anfangsweg Y-Achse
@@ -73,7 +73,7 @@ function [ dat1,dat2 ] = Wurf3D(vars)
 	Vx																		%Ausgabe Vx (Kontrolle)
 	Vy																		%Ausgabe Vy (Kontrolle)
     Vz
-	V_0=[Vx,Vy,Vz,x_0,y_0,z_0];													%Anfangsvektors für gekoppelte DGL
+	V_0=[Vx,Vy,Vz,x_0,y_0,z_0];												%Anfangsvektors für gekoppelte DGL
 
 ## Rechnungen	
 

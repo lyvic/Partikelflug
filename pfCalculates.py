@@ -12,11 +12,14 @@ import Tkinter as tki
 
 class Calculate3D(threading.Thread):
     def __init__(self, guest, rhop, dp, v, anglee, anglea, prec,
-                 duration, windx, windy, windz):
+                 duration, windx, windy, windz, rhog, eta, grav):
         threading.Thread.__init__(self)
         self.rhop = (rhop)
         self.dp = (dp)
         self.v = (v)
+        self.rhog = (rhog)
+        self.eta = (eta)
+        self.grav = (grav)
         self.anglee = (anglee)
         self.anglea = (anglea)
         self.prec = (prec)
@@ -46,7 +49,8 @@ class Calculate3D(threading.Thread):
         [Calculate3D.y, Calculate3D.y2] = \
             oc.call('Wurf3D.m', [self.rhop, self.dp, self.v,
                     self.anglee, self.anglea, self.prec, self.duration,
-                    self.windx, self.windy, self.windz],
+                    self.windx, self.windy, self.windz, self.rhog,
+                    self.eta, self.grav],
                     verbose=True)
         print 'Done! Data from Octave available - mode 3D'
         # Delete old data
@@ -112,8 +116,8 @@ class Calculate3D(threading.Thread):
 
 
 class Calculate(threading.Thread):
-    def __init__(self, guest, rhop, dp, v, angle,
-                 prec, duration, windx, windy):
+    def __init__(self, guest, rhop, rhog, dp, v, angle,
+                 prec, duration, eta, grav, windx, windy):
         threading.Thread.__init__(self)
         self.rhop = (rhop)
         self.dp = (dp)
@@ -123,6 +127,9 @@ class Calculate(threading.Thread):
         self.duration = (duration)
         self.windx = (windx)
         self.windy = (windy)
+        self.rhog = (rhog)
+        self.eta = (eta)
+        self.grav = (grav)
         self.guest = guest
         print self.rhop
         print self.dp
@@ -141,7 +148,8 @@ class Calculate(threading.Thread):
         [Calculate.y, Calculate.y2] = \
             oc.call('Wurfp3.m', [self.rhop, self.dp, self.v,
                     self.angle, self.prec, self.duration,
-                    self.windx, self.windy], verbose=True)
+                    self.windx, self.windy, self.rhog,
+                    self.eta, self.grav], verbose=True)
         print 'Done! Data from Octave available'
         #Delete old plots
         self.guest.myplot(0, self.y[:, 0], self.y[:, 1], 'Time in [s]',
@@ -185,86 +193,3 @@ class Calculate(threading.Thread):
         self.guest.info.config(state=tki.DISABLED)
         self.guest.redraw2()
         return
-
-
-class CalculateN(object):
-    def __init__(self, guest, indata):
-        self.rhop = indata[0]
-        self.dp = indata[1]
-        self.v = indata[2]
-        self.angle = indata[3]
-        self.prec = indata[4]
-        self.duration = indata[5]
-        self.windx = indata[6]
-        self.windy = indata[7]
-        self.guest = guest
-        print self.rhop
-        print self.dp
-        print self.v
-        print self.angle
-        print self.prec
-        print self.duration
-        self.run()
-
-    def decimalize(self, numin):
-        decout = dc.Decimal(numin).quantize(dc.Decimal('.001'),
-                                            rounding=dc.ROUND_HALF_DOWN)
-        return decout
-
-    def run(self):
-        print 'Reading values and calling Octave'
-        [CalculateN.y, CalculateN.y2] = \
-            oc.call('Wurfp3m.m', [self.rhop, self.dp, self.v,
-                    self.angle, self.prec, self.duration, self.windx,
-                    self.windy],
-                    verbose=False)
-        print 'Done! Data from Octave available'
-        #Delete old plots
-        #self.guest.myplot_add(0, self.y[:, 0], self.y[:, 1])
-        #self.guest.Paper.show()
-
-        # Return from octave: [t,nghs,nghp,ngvs,ngvp,hnt,hnp,hnv,vnt,vnv,vnp]
-        # self.maxhight = str(max(CalculateN.y[:, 4]))
-        # self.maxhightxid = nm.argmax(CalculateN.y[:, 4])
-        # self.maxhightx = str(CalculateN.y[self.maxhightxid, 2])
-        # self.duration = str(CalculateN.y2[0, 0])
-        # self.relaxtime = str(CalculateN.y2[0, 1])
-        # self.VTSN = str(CalculateN.y2[0, 2])
-        # self.VTSS = str(CalculateN.y2[0, 3])
-        # self.nusv = str(CalculateN.y2[0, 4])
-        # self.absolutey = [abs(x) for x in CalculateN.y[1:, 4]]
-        # self.hitground = str(CalculateN.y[nm.argmin(self.absolutey), 2])
-        # dc.getcontext().prec = 12
-        # self.maxhightdec = self.decimalize(self.maxhight)
-        # self.maxhightxdec = self.decimalize(self.maxhightx)
-        # self.hitgrounddec = self.decimalize(self.hitground)
-        # self.VTSNdec = self.decimalize(self.VTSN)
-        # self.VTSSdec = self.decimalize(self.VTSS)
-        # self.nusvdec = self.decimalize(self.nusv)
-        # maxflight = "Max flight height: "+str(self.maxhightdec)+" meters at "\
-        #     + str(self.maxhightxdec)+" meters \n"+str(self.VTSNdec)\
-        #     + " m/s Newton settling velocity\n"\
-        #     + str(self.VTSSdec)+" m/s Stokes settling velocity\n"\
-        #     + str(self.nusvdec)+" m/s numerical settling velocity\n"
-        # if self.maxhightxid < nm.argmin(self.absolutey):
-        #     hitground = "Hits ground in: "+str(self.hitgrounddec)\
-        #                 + " meters distance \n"
-        # else:
-        #     hitground = "Does not reach the ground in observed timespan \n"
-        # entries = "Done \n"+"Relax-time: "+self.relaxtime+" seconds\n" + \
-        #     "Duration: "+self.duration+" seconds\n"+maxflight+hitground\
-
-        # self.guest.info.config(state=tki.NORMAL)
-        # self.guest.info.insert(tki.END, entries)
-        # self.guest.info.yview(tki.END)
-        # self.guest.info.config(state=tki.DISABLED)
-        # self.guest.redraw2()
-        return [CalculateN.y, CalculateN.y2]
-
-
-# def calculate_m(self, indata):
-#         print 'Reading values and calling Octave'
-#         [CalculateN.y, CalculateN.y2] = \
-#             oc.call('Wurfp3m.m', [indata],
-#                     verbose=False)
-#         print 'Done! Data from Octave available'

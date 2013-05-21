@@ -28,20 +28,20 @@ def multipcalc(data, mode='2d'):
 
 def calculate_m(indata):
     print 'Reading values and calling Octave'
-    [CalculateN.y, CalculateN.y2] = \
+    [Calculate.y, Calculate.y2] = \
         oc.call('Wurfp3.m', [indata],
                 verbose=False)
     print 'Done! Data from Octave available'
-    return [CalculateN.y, CalculateN.y2]
+    return [Calculate.y, Calculate.y2]
 
 
 def calculate_m3d(indata):
     print 'Reading values and calling Octave'
-    [CalculateN.y, CalculateN.y2] = \
+    [Calculate.y, Calculate.y2] = \
         oc.call('Wurf3D.m', [indata],
                 verbose=False)
     print 'Done! Data from Octave available'
-    return [CalculateN.y, CalculateN.y2]
+    return [Calculate.y, Calculate.y2]
 
 
 class Manips(object):
@@ -79,6 +79,13 @@ class Manips(object):
                                       columnspan=2, sticky="NSWE")
             self.drawselectm.grid_forget()
 
+    def msgboard(self, message):
+        self.info.config(state=tki.NORMAL)
+        self.info.insert(tki.END, message)
+        # Scroll to end of window.
+        self.info.yview(tki.END)
+        self.info.config(state=tki.DISABLED)
+
     def ClickClose(self, event):
         """Calls ClickClose2. The event type will be ignored"""
         self.ClickClose2()
@@ -109,76 +116,68 @@ class Manips(object):
         the Calculate function in order to do some work"""
         # Read the given values for the variables.
         try:
-            self.e1 = float(self.rhopent.get())
-            self.e2 = float(self.dpent.get())
-            self.e3 = float(self.velent.get())
+            self.rhop = float(self.rhopent.get())
+            self.dp = float(self.dpent.get())
+            self.v = float(self.velent.get())
+            self.anglee = float(self.angleeent.get())
+            self.prec = float(self.precent.get())
+            self.duration = float(self.durationent.get())
+            self.rhog = float(self.rhogent.get())
+            self.eta = float(self.etaent.get())
+            self.grav = float(self.gravent.get())
+            self.windx = float(self.windxent.get())
+            self.windz = float(self.windzent.get())
             if self.set3dstatevar == 0:
                 self.currentdata = 1
-                self.e4 = float(self.angleeent.get())
-                self.e5 = float(self.precent.get())
-                self.e6 = float(self.durationent.get())
-                self.e7 = float(self.windxent.get())
-                self.e8 = float(self.windyent.get())
-
                 # Inform user about the configuration.
                 self.entries = "Density: %.2f kg/m³ \n"\
                                "Particle size: %.2f µm\n" \
                                "Velocity: %.2f m/s \nElevation: %.2f°\n"\
                                "Precision set to %s \nDuration set to %s\n"\
+                               "Gravity %s \nFluid Density set to %s\n"\
                                "Horizontal Wind: %.2f m/s\n"\
                                "Vertical Wind: %.2f m/s\n"\
                                "Calculations running, please wait ... \n" \
-                               % (self.e1, self.e2, self.e3, self.e4, self.e5,
-                                  self.e6, self.e7, self.e8)
+                               % (self.rhop, self.dp, self.v, self.anglee,
+                                  self.prec, self.duration, self.grav, self.rhog,
+                                  self.windx, self.windz)
             else:
                 self.currentdata = 2
-                self.e4 = float(self.angleeent.get())
-                self.e5 = float(self.angleaent.get())
-                self.e6 = float(self.precent.get())
-                self.e7 = float(self.durationent.get())
-                self.e8 = float(self.windxent.get())
-                self.e9 = float(self.windyent.get())
-                self.e10 = float(self.windzent.get())
-
+                self.anglea = float(self.angleaent.get())
+                self.windy = float(self.windyent.get())
                 # Inform user about the configuration.
                 self.entries = "Density: %.2f kg/m³ \n"\
                                "Particle size: %.2f µm\n" \
                                "Velocity: %.2f m/s \n"\
                                "Elevation: %.2f°\nAzimuth: %.2f°\n"\
                                "Precision set to %s \nDuration set to %s\n"\
+                               "Gravity %s \nFluid Density set to %s\n"\
                                "Wind in X: %.2f m/s\nWind in Y : %.2f m/s\n"\
                                "Wind in Z: %.2f m/s\n"\
                                "Calculations running, please wait ... \n" \
-                               % (self.e1, self.e2, self.e3, self.e4, self.e5,
-                                  self.e6, self.e7, self.e8, self.e9, self.e10)
+                               % (self.rhop, self.dp, self.v, self.anglee, self.anglea,
+                                  self.prec, self.duration,  self.grav, self.rhog,
+                                  self.windx, self.windy, self.windz)
 
         except ValueError:
             self.message = "No valid values entered\n"
-            self.info.config(state=tki.NORMAL)
-            self.info.insert(tki.END, self.message)
-            # Scroll to end of window.
-            self.info.yview(tki.END)
-            self.info.config(state=tki.DISABLED)
+            self.msgboard(self.message)
             return
 
-        self.info.config(state=tki.NORMAL)
-        self.info.insert(tki.END, self.entries)
-        # Scroll to end of window.
-        self.info.yview(tki.END)
-        self.info.config(state=tki.DISABLED)
+        self.msgboard(self.entries)
         print 'RunThis2s called'  # Shows in prompt, not in GUI
         # Call Calculate, invokes a new thread in order to keep the
         # GUI alive while calculating
         if self.set3dstatevar == 0:
-            CL = Calculate(self, self.e1, self.e2,
-                           self.e3, self.e4, self.e5, self.e6,
-                           self.e7, self.e8)
+            CL = Calculate(self, self.rhop, self.rhog, self.dp, self.v, self.anglee,
+                           self.prec, self.duration, self.eta, self.grav,
+                           self.windx, self.windz)
             # Starts the new thread and the actual calculation
             CL.start()
         else:
-            CL = Calculate3D(self, self.e1, self.e2,
-                             self.e3, self.e4, self.e5, self.e6,
-                             self.e7, self.e8, self.e9, self.e10)
+            CL = Calculate3D(self, self.rhop, self.dp, self.v, self.anglee,
+                             self.anglea, self.prec, self.duration, self.windx, 
+                             self.windy, self.windz, self.rhog, self.eta, self.grav)
             # Starts the new thread and the actual calculation
             CL.start()
 
@@ -188,17 +187,13 @@ class Manips(object):
         # Read the given values for the variables.
         try:
             self.e1r = tuple(map(float, self.rhopentm.get().split('-')))
-            self.e1 = \
-                self.ingen(self.multpartslcrhop.get(), self.e1r)
+            self.e1 = self.ingen(self.multpartslcrhop.get(), self.e1r)
             self.e2r = tuple(map(float, self.dpentm.get().split('-')))
-            self.e2 = \
-                self.ingen(self.multpartslcdp.get(), self.e2r)
+            self.e2 = self.ingen(self.multpartslcdp.get(), self.e2r)
             self.e3r = tuple(map(float, self.velentm.get().split('-')))
-            self.e3 = \
-                self.ingen(self.multpartslcvel.get(), self.e3r)
+            self.e3 = self.ingen(self.multpartslcvel.get(), self.e3r)
             self.e4r = tuple(map(float, self.angleeentm.get().split('-')))
-            self.e4 = \
-                self.ingen(self.multpartslcanglee.get(), self.e4r)
+            self.e4 = self.ingen(self.multpartslcanglee.get(), self.e4r)
             if self.set3dstatevar == 0:
                 self.currentdata = 3
                 self.e5 = float(self.precent.get())

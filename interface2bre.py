@@ -293,18 +293,18 @@ class Controlset(Manips):
             self.gravent = ttk.Entry(self.enviframe, validate='key', validatecommand=vcmd, width=10)
             self.gravent.insert(0, 9.81)
             # Fluid Density
-            self.fludensent = ttk.Entry(self.enviframe, validate='key', validatecommand=vcmd, width=10)
-            self.fludensent.insert(0, 1.205)
+            self.rhogent = ttk.Entry(self.enviframe, validate='key', validatecommand=vcmd, width=10)
+            self.rhogent.insert(0, 1.205)
             # Fluid Viscosity
-            self.fluvisent = ttk.Entry(self.enviframe, validate='key', validatecommand=vcmd, width=10)
-            self.fluvisent.insert(0, 1.81e-5)
+            self.etaent = ttk.Entry(self.enviframe, validate='key', validatecommand=vcmd, width=10)
+            self.etaent.insert(0, 1.81e-5)
             # Creating labels next to corresponding entry-boxes
             self.preclab = ttk.Label(self.solframe, text='Precision/Steps')
             self.durationlab = ttk.Label(self.solframe, text='Duration in s')
             self.windlab = ttk.Label(self.enviframe, text='X-Y-Z Wind in m/s')
             self.gravlab = ttk.Label(self.enviframe, text='Gravity in m/s²')
-            self.fludenslab = ttk.Label(self.enviframe, text='Fluid Density in kg/m³')
-            self.fluvislab = ttk.Label(self.enviframe, text='Fluid Dyn. Visc. in Pa s')
+            self.rhoglab = ttk.Label(self.enviframe, text='Fluid Density in kg/m³')
+            self.etalab = ttk.Label(self.enviframe, text='Fluid Dyn. Visc. in Pa s')
 
             # Positioning
             self.enviframe.grid(row=0, column=0, columnspan=3, sticky="SNEW")
@@ -320,10 +320,10 @@ class Controlset(Manips):
             self.windzent.grid(row=0, column=2, padx=1, sticky="E")
             self.gravlab.grid(row=1, column=0, sticky="W")
             self.gravent.grid(row=1, column=2, sticky="E")
-            self.fludenslab.grid(row=2, column=0, sticky="W")
-            self.fludensent.grid(row=2, column=2, sticky="E")
-            self.fluvislab.grid(row=3, column=0, sticky="W")
-            self.fluvisent.grid(row=3, column=2, sticky="E")
+            self.rhoglab.grid(row=2, column=0, sticky="W")
+            self.rhogent.grid(row=2, column=2, sticky="E")
+            self.etalab.grid(row=3, column=0, sticky="W")
+            self.etaent.grid(row=3, column=2, sticky="E")
 
             ### Control buttons
             # configuring grid
