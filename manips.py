@@ -21,6 +21,8 @@ def multipcalc(data, mode='2d'):
         results = pool.map_async(calculate_m3d, data).get()
     else:
         results = pool.map_async(calculate_m, data).get()
+    pool.close()
+    pool.join()
     # print results
     # print "Pool is over"
     return results
