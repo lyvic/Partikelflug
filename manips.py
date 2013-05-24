@@ -5,6 +5,7 @@ the data input from the interface. It does all manipulations necessary.
 The core of any feature should be found here."""
 
 # Importing modules
+import time
 import numpy as nm
 import random
 from oct2py import octave as oc
@@ -18,6 +19,7 @@ from pfCalculates import *
 ### Why? I don't really know, but otherwise the multiprocessing doesn't work.
 # Multiparticle calculations
 def multipcalc(data, mode='2d'):
+    begin = time.time()
     # Counting the number of available CPUs in System
     pool_size = multiprocessing.cpu_count()
     # Creating a pool of processes with the maximal number of CPUs possible
@@ -30,6 +32,8 @@ def multipcalc(data, mode='2d'):
     # Properly close and end all processes, once we're done
     pool.close()
     pool.join()
+    end = time.time()
+    print (end-begin)
     return results
 
 
@@ -374,6 +378,9 @@ class Manips(object):
     # numerical = +4
     # stokes = +8
     # newton = +12
+    # dat2=[duration,trelax,VTSN,VTSS,nusv];
+    # 3D Data
+    # dat1=[ngt,ngxs,ngys,ngzs,ngxp,ngyp,ngzp];
     # dat2=[duration,trelax,VTSN,VTSS,nusv];
     # Setting up the options in a dictionary
     # First string: Option as shown in GUI

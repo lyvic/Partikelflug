@@ -3,6 +3,7 @@
 """Calculations in separate threads"""
 
 # importing libraries
+import time
 import threading
 import numpy as nm
 import decimal as dc

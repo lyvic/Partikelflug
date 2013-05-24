@@ -98,23 +98,27 @@ function [ dat1,dat2 ] = Wurfp3(vars)
 	tspan=linspace(0,duration,steps);
 	VTSS=-rhop.*dp.^2.*grav./18./eta;
     VTSN=-sqrt(4.*rhop.*dp.*grav./3./0.44./rhog);
+	% Konstanten für DGLs berechnen
+	k=(pi()./8).*rhog.*dp.^2;										%Konstanten berechnen
+	c=rhog.*dp./eta;												%Konstanter Teil der Reynoldszahl berechnen
+	m=pi()./6.*rhop.*dp.^3;											%Masse des Partikels berechnen
     
 ## Gekoppelte Bewegungsgleichung lösen	
-    odeopt=odeset('MaxStep',10,'InitialStep',1E-06);
+    odeopt=odeset('MaxStep',10,'InitialStep',1E-06,'RelTol',1E-06,'AbsTol',1E-06);
     odeopt2=odeset('MaxStep',10,'InitialStep',1E-06,'RelTol',1E-06,'AbsTol',1E-06);
-    [ngt,r]=ode45(@Vts,[tspan],V_0,odeopt,rhop,rhog,grav,eta,dp,windx,windy);
+    [ngt,r]=ode23(@Vts,[tspan],V_0,odeopt,rhop,rhog,grav,eta,dp,windx,windy,k,c,m);
     printf("Gekoppelte DGL fertig \n");
     nghs=r(:,1);
     nghp=r(:,3);
     ngvs=r(:,2);
     ngvp=r(:,4);
-    [nusvt,nusvi]=ode45(@Vtsv,[0,duration],[1E-08,0],odeopt2,rhop,rhog,grav,eta,dp);
+    [nusvt,nusvi]=ode23(@Vtsv,[0,duration],[1E-08,0],odeopt2,rhop,rhog,grav,eta,dp,k,c,m);
     nusv=nusvi(end,1);
-    [nuvt,nuvi]=ode45(@Vtsv,[tspan],Vv,odeopt,rhop,rhog,grav,eta,dp);
+    [nuvt,nuvi]=ode23(@Vtsv,[tspan],Vv,odeopt,rhop,rhog,grav,eta,dp,k,c,m);
     nuvs=nuvi(:,1);
     nuvp=nuvi(:,2);
     printf("Vertikal ungekoppelt fertig \n");
-    [nuht,nuhi]=ode45(@Vtsh,[tspan],Vh,odeopt,rhop,rhog,eta,dp);
+    [nuht,nuhi]=ode23(@Vtsh,[tspan],Vh,odeopt,rhop,rhog,eta,dp,k,c,m);
     nuhs=nuhi(:,1);
     nuhp=nuhi(:,2);
     printf("Horizontal ungekoppelt fertig \n");
@@ -263,43 +267,51 @@ endfunction
 		## Horizontale Bewegung (ohne Gravitation), 
 		## Ausgabe: Geschwindigkeit dy(1), Weg dy(2)
 		
-		function 	dy= Vtsh(x,y,rhop,rhog,eta,dp)						
-				k=(pi()./8).*rhog.*dp.^2;									%Konstanten berechnen
-				c=rhog.*dp./eta;											%Konstanter Teil der Reynoldszahl berechnen
-				m=pi()./6.*rhop.*dp.^3;										%Masse des Partikels berechnen
-				dy(1) = -((24./(c.*y(1)))+(2.6.*(c.*y(1)./5))./(1+(c.*y(1)./5).^1.52)+(0.411.*(c.*y(1)./263000).^-7.94)./(1+(c.*y(1)./263000).^-8)+((c.*y(1)).^0.8./461000)).*k.*y(1).^2./m;
-				dy(2) = y(1);												%Geschwindigkeit nochmal integrieren ergibt den Weg
-				dy=[dy(1);dy(2)];											%Lösungen in einer Matrix zurückgeben
+		function 	dy= Vtsh(x,y,rhop,rhog,eta,dp,k,c,m)
+				dy=[-((24./(c.*y(1)))+(2.6.*(c.*y(1)./5))./(1+(c.*y(1)./5).^1.52)+ ...
+				(0.411.*(c.*y(1)./263000).^-7.94)./(1+(c.*y(1)./263000).^-8)+ ...
+				((c.*y(1)).^0.8./461000)).*k.*y(1).^2./m;y(2)];											%Lösungen in einer Matrix zurückgeben
 		endfunction
 		
 		## Vertikale Bewegung mit Gravitation, für positive Geschwindigkeiten
 		## Ausgabe: Geschwindigkeit dy(1) und Weg dy(2)
-		function 	dy= Vtsv(x,y,rhop,rhog,grav,eta,dp)						%Bew.gl. für positive Geschwindigkeiten, löst Geschwindigkeit und Weg auf
-			k=(pi()./8).*rhog.*dp.^2;										%Konstanten berechnen
-			c=rhog.*dp./eta;												%Konstanter Teil der Reynoldszahl berechnen
-			m=pi()./6.*rhop.*dp.^3;											%Masse des Partikels berechnen
-			dy(1) = -sign(y(1)).*((24./(c.*abs(y(1))))+(2.6.*(c.*abs(y(1))./5))./(1+(c.*abs(y(1))./5).^1.52)+(0.411.*(c.*abs(y(1))./263000).^-7.94)./(1+(c.*abs(y(1))./263000).^-8)+((c.*abs(y(1))).^0.8./461000)).*k.*abs(y(1)).^2./m - grav;
-			%dy(1)=-(24./(c.*y(1))).*(1+0.15.*(c.*y(1)).^0.687).*k.*y(1).^2 ./m - 9.81 ; %alternative Formel nach Schiller und Naumann
-			dy(2) = y(1);
-			dy=[dy(1);dy(2)];
+		function 	dy= Vtsv(x,y,rhop,rhog,grav,eta,dp,k,c,m)
+		%dy(1)=-(24./(c.*y(1))).*(1+0.15.*(c.*y(1)).^0.687).*k.*y(1).^2 ./m - 9.81 ; %alternative Formel nach Schiller und Naumann
+			dy=[(-sign(y(1)).*((24./(c.*abs(y(1))))+ ...
+			(2.6.*(c.*abs(y(1))./5))./(1+(c.*abs(y(1))./5).^1.52)+ ...
+			(0.411.*(c.*abs(y(1))./263000).^-7.94)./(1+(c.*abs(y(1))./263000).^-8)+ ...
+			((c.*abs(y(1))).^0.8./461000)).*k.*abs(y(1)).^2./m - grav); ...
+			y(1)];
 		endfunction
 		
 	## Gekoppelte DGLs
 		
 		## 
-		function 	dy= Vts(x,y,rhop,rhog,grav,eta,dp,windx,windy)
-			k=(pi()./8).*rhog.*dp.^2;										%Konstanten berechnen
-			c=rhog.*dp./eta;												%Konstanter Teil der Reynoldszahl berechnen
-			m=pi()./6.*rhop.*dp.^3;											%Masse des Partikels berechnen
-			m2=pi()./6.*rhog.*dp.^3;                                        %Anteil der Auftriebsmasse
+		function 	dy= Vts(x,y,rhop,rhog,grav,eta,dp,windx,windy,k,c,m)
 			## Schiller und Naumann Variante (keine Signum Funktion integriert), bitte Anpassen vor Verwendung.
 			%dy(1) = -((24./(c.*sqrt((y(1).^2)+(y(2).^2)))).*(1+0.15.*(c.*sqrt((y(1).^2)+(y(2).^2))).^0.687)).*k./m.*(sqrt((y(1).^2)+(y(2).^2)).*y(1));
 			%dy(2) = -((24./(c.*sqrt((y(1).^2)+(y(2).^2)))).*(1+0.15.*(c.*sqrt((y(1).^2)+(y(2).^2))).^0.687)).*k./m.*(sqrt((y(1).^2)+(y(2).^2)).*y(2)) -grav +(rhog./rhop.*grav) ;		
 			## Morrison Variante
-			dy(1) = -sign((y(1)+windx)).*((24./(c.*sqrt(((y(1)+windx).^2)+((y(2)+windy).^2))))+(2.6.*((c.*sqrt(((y(1)+windx).^2)+((y(2)+windy).^2)))./5))./(1+((c.*sqrt(((y(1)+windx).^2)+((y(2)+windy).^2)))./5).^1.52)+(0.411.*((c.*sqrt(((y(1)+windx).^2)+((y(2)+windy).^2)))./263000).^-7.94)./(1+((c.*sqrt(((y(1)+windx).^2)+((y(2)+windy).^2)))./263000).^-8)+((c.*sqrt(((y(1)+windx).^2)+((y(2)+windy).^2))).^0.8./461000)).*k.*sqrt(((y(1)+windx).^2)+((y(2)+windy).^2)).*abs(y(1)+windx)./m;
-			dy(2) = -sign((y(2)+windy)).*((24./(c.*sqrt(((y(1)+windx).^2)+((y(2)+windy).^2))))+(2.6.*((c.*sqrt(((y(1)+windx).^2)+((y(2)+windy).^2)))./5))./(1+((c.*sqrt(((y(1)+windx).^2)+((y(2)+windy).^2)))./5).^1.52)+(0.411.*((c.*sqrt(((y(1)+windx).^2)+((y(2)+windy).^2)))./263000).^-7.94)./(1+((c.*sqrt(((y(1)+windx).^2)+((y(2)+windy).^2)))./263000).^-8)+((c.*sqrt(((y(1)+windx).^2)+((y(2)+windy).^2))).^0.8./461000)).*k.*sqrt(((y(1)+windx).^2)+((y(2)+windy).^2)).*abs(y(2)+windy)./m -grav +(rhog./rhop.*grav);
-			dy(3) = y(1);
-			dy(4) = y(2);
-			dy= [dy(1);dy(2);dy(3);dy(4)];
+			dy = [(-sign((y(1,:)+windx)).*((24./(c.*sqrt(((y(1,:)+windx).^2)+ \
+			((y(2,:)+windy).^2))))+(2.6.*((c.*sqrt(((y(1,:)+windx).^2)+ \
+			((y(2,:)+windy).^2)))./5))./(1+((c.*sqrt(((y(1,:)+windx).^2)+ \
+			((y(2,:)+windy).^2)))./5).^1.52)+(0.411.*((c.*sqrt(((y(1,:)+windx).^2)+ \
+			((y(2,:)+windy).^2)))./263000).^-7.94)./(1+((c.*sqrt(((y(1,:)+windx).^2)+ \
+			((y(2,:)+windy).^2)))./263000).^-8)+((c.*sqrt(((y(1,:)+windx).^2)+ \
+			((y(2,:)+windy).^2))).^0.8./461000)).*k.*sqrt(((y(1,:)+windx).^2)+ \
+			((y(2,:)+windy).^2)).*abs(y(1,:)+windx)./m); \
+			
+			(-sign((y(2,:)+windy)).*((24./(c.*sqrt(((y(1,:)+windx).^2)+ \
+			((y(2,:)+windy).^2))))+(2.6.*((c.*sqrt(((y(1,:)+windx).^2)+ \
+			((y(2,:)+windy).^2)))./5))./(1+((c.*sqrt(((y(1,:)+windx).^2)+ \
+			((y(2,:)+windy).^2)))./5).^1.52)+(0.411.*((c.*sqrt(((y(1,:)+windx).^2)+ \
+			((y(2,:)+windy).^2)))./263000).^-7.94)./(1+((c.*sqrt(((y(1,:)+windx).^2)+ \
+			((y(2,:)+windy).^2)))./263000).^-8)+((c.*sqrt(((y(1,:)+windx).^2)+ \
+			((y(2,:)+windy).^2))).^0.8./461000)).*k.*sqrt(((y(1,:)+windx).^2)+ \
+			((y(2,:)+windy).^2)).*abs(y(2,:)+windy)./m -grav +(rhog./rhop.*grav));\
+			
+			(y(1,:));\
+			
+			(y(2,:))];
 		endfunction		
 		
