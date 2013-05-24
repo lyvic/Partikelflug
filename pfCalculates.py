@@ -12,7 +12,8 @@ import Tkinter as tki
 
 class Calculate3D(threading.Thread):
     def __init__(self, guest, rhop, dp, v, anglee, anglea, prec,
-                 duration, windx, windy, windz, rhog, eta, grav):
+                 duration, windx, windy, windz, rhog, eta, grav,
+                 posx, posy, posz):
         threading.Thread.__init__(self)
         self.rhop = (rhop)
         self.dp = (dp)
@@ -27,6 +28,9 @@ class Calculate3D(threading.Thread):
         self.windx = (windx)
         self.windy = (windy)
         self.windz = (windz)
+        self.posx = posx
+        self.posy = posy
+        self.posz = posz
         self.guest = guest
         print self.rhop
         print self.dp
@@ -50,7 +54,7 @@ class Calculate3D(threading.Thread):
             oc.call('Wurf3D.m', [self.rhop, self.dp, self.v,
                     self.anglee, self.anglea, self.prec, self.duration,
                     self.windx, self.windy, self.windz, self.rhog,
-                    self.eta, self.grav],
+                    self.eta, self.grav, self.posx, self.posy, self.posz],
                     verbose=True)
         print 'Done! Data from Octave available - mode 3D'
         self.guest.myplot(1, self.y[:, 4], self.y[:, 5], 'XDistance in [m]',
@@ -116,7 +120,7 @@ class Calculate3D(threading.Thread):
 
 class Calculate(threading.Thread):
     def __init__(self, guest, rhop, rhog, dp, v, angle,
-                 prec, duration, eta, grav, windx, windy):
+                 prec, duration, eta, grav, windx, windy, posx, posz):
         threading.Thread.__init__(self)
         self.rhop = (rhop)
         self.dp = (dp)
@@ -129,6 +133,8 @@ class Calculate(threading.Thread):
         self.rhog = (rhog)
         self.eta = (eta)
         self.grav = (grav)
+        self.posx = posx
+        self.posz = posz
         self.guest = guest
         print self.rhop
         print self.dp
@@ -148,7 +154,7 @@ class Calculate(threading.Thread):
             oc.call('Wurfp3.m', [self.rhop, self.dp, self.v,
                     self.angle, self.prec, self.duration,
                     self.windx, self.windy, self.rhog,
-                    self.eta, self.grav], verbose=True)
+                    self.eta, self.grav, self.posx, self.posz], verbose=True)
         print 'Done! Data from Octave available'
         self.guest.myplot(0, self.y[:, 0], self.y[:, 1], 'Time in [s]',
                           'Speed in [m/s]', pttl='Speed-Time-Horizontal')

@@ -25,7 +25,6 @@
 ## Die Betrachtungsdauer wird für kleine Partikel über die Relaxationszeit abgeschätz. Bei großen Partikeln
 ## oder für Betrachtungsdauer über den Umkehrzeitpunkt nach Newton angepasst. 
 ## Eine Überlagerung mit einer Luftströmung ist bisher nur für die Gekoppelte Variante nach Morrison integriert.
-## Beim Speichern als pdf kommt es zu Fehlern. Hier liegen Fehler bei Octave vor.
 ## Die Ergebnisse werden bisher als richtig angenommen. Oft sind unerwartete Werte das Resultat von Ungenauigkeiten oder der Effekt der
 ## getrennten Betrachtung einer gekoppelten Differentialgleichung.
 ## On git now
@@ -33,8 +32,10 @@
 
 function [ dat1,dat2 ] = Wurf3D(vars)
 ## Variablen und Konstanten bestimmten
-    %vars(1),vars(2),vars(3),vars(4),vars(5),vars(6),vars(7),vars(8),vars(9),vars(10),vars(11),vars(12),vars(13).
+    %vars(1),vars(2),vars(3),vars(4),vars(5),vars(6),vars(7),vars(8),vars(9),vars(10),vars(11),vars(12),vars(13)
     %rhop   ,dp     ,V      ,elev   ,azim   ,steps  ,durat  ,windx  ,windy  ,windz   ,rhog    ,eta     ,grav
+	%vars(14),vars(15),vars(16)
+	%posx    ,posy    ,posz
 	rhop=2900;																%Dichte des Partikels in kg/qm
     rhop=vars(1);
 	rhog=1.205;																%Dichte des Fluides in kg/qm
@@ -68,8 +69,11 @@ function [ dat1,dat2 ] = Wurf3D(vars)
 	Vy=V.*cos(alpha).*sin(beta);											%Berechnung Y-Anteil der Abschussgeschwindigkeit
     Vz=V.*sin(alpha);
 	x_0=0;																	%Bereits zurückgelegter Anfangsweg X-Achse
+	x_0=vars(14);
 	y_0=0;																	%Bereits zurückgelegter Anfangsweg Y-Achse
+	y_0=vars(15);
     z_0=0;
+	z_0=vars(16);
 	Vx																		%Ausgabe Vx (Kontrolle)
 	Vy																		%Ausgabe Vy (Kontrolle)
     Vz

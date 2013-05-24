@@ -124,7 +124,7 @@ class Controlset(Manips):
             ### Parameters entries menus
             # Wrapping Notebook to set up parameters menus
             self.parameters = ttk.Notebook(self.main)
-            self.parameters.grid(row=3, rowspan=3, column=1, sticky="SWE")
+            self.parameters.grid(row=2, rowspan=4, column=1, sticky="SWE")
             # Single particle, Multiple particles and config Tab
             self.parasingpart = tki.Frame()
             self.paramultpart = tki.Frame()
@@ -156,6 +156,15 @@ class Controlset(Manips):
             # angle azimut
             self.angleaent = ttk.Entry(self.parasingpart, validate='key', validatecommand=vcmd, width=10)
             self.angleaent.insert(0, 30)
+            # Initial Position X
+            self.posxent = ttk.Entry(self.parasingpart, validate='key', validatecommand=vcmd, width=10)
+            self.posxent.insert(0, 0)
+            # Initial Position Y
+            self.posyent = ttk.Entry(self.parasingpart, validate='key', validatecommand=vcmd, width=10)
+            self.posyent.insert(0, 0)
+            # Initial Position Z
+            self.poszent = ttk.Entry(self.parasingpart, validate='key', validatecommand=vcmd, width=10)
+            self.poszent.insert(0, 0)
             # Run Button
             self.RunButton1 = ttk.Button(self.parasingpart, text='Run',
                                          command=self.RunThis2s)
@@ -166,6 +175,9 @@ class Controlset(Manips):
             self.vellab = ttk.Label(self.parasingpart, text='Velocity in m/s')
             self.angleelab = ttk.Label(self.parasingpart, text='Elevation in deg°')
             self.anglealab = ttk.Label(self.parasingpart, text='Azimuth in deg° (3D)')
+            self.posxlab = ttk.Label(self.parasingpart, text='Initial X-Position in m')
+            self.posylab = ttk.Label(self.parasingpart, text='Initial Y-Position in m')
+            self.poszlab = ttk.Label(self.parasingpart, text='Initial Z-Position in m')
 
             # Positioning everything in the grid
             self.rhoplab.grid(row=0, column=0, sticky="W")
@@ -178,7 +190,13 @@ class Controlset(Manips):
             self.angleeent.grid(row=3, column=2, sticky="E")
             self.anglealab.grid(row=4, column=0, sticky="W")
             self.angleaent.grid(row=4, column=2, sticky="E")
-            self.RunButton1.grid(row=5, column=0, sticky="SW")
+            self.posxlab.grid(row=5, column=0, sticky="E")
+            self.posxent.grid(row=5, column=2, sticky="E")
+            self.posylab.grid(row=6, column=0, sticky="E")
+            self.posyent.grid(row=6, column=2, sticky="E")
+            self.poszlab.grid(row=7, column=0, sticky="E")
+            self.poszent.grid(row=7, column=2, sticky="E")
+            self.RunButton1.grid(row=8, column=0, sticky="SW")
             self.RunButton1.bind('<Return>', self.RunThiss)
 
             ### Multiple particles
@@ -188,19 +206,26 @@ class Controlset(Manips):
             self.partnumentm.insert(0, 10)
             # Density
             self.rhopentm = ttk.Entry(self.paramultpart, width=10)
-            self.rhopentm.insert(0, '2900-9000')
+            self.rhopentm.insert(0, '2900-2900')
             # diameter
             self.dpentm = ttk.Entry(self.paramultpart, width=10)
-            self.dpentm.insert(0, '50-500')
+            self.dpentm.insert(0, '500-500')
             # velocity
             self.velentm = ttk.Entry(self.paramultpart, width=10)
-            self.velentm.insert(0, '1-50')
+            self.velentm.insert(0, '5-5')
             # angle lift
             self.angleeentm = ttk.Entry(self.paramultpart, width=10)
-            self.angleeentm.insert(0, '5-50')
+            self.angleeentm.insert(0, '5-5')
             # angle turn
             self.angleaentm = ttk.Entry(self.paramultpart, width=10)
-            self.angleaentm.insert(0, '5-50')
+            self.angleaentm.insert(0, '5-5')
+            # Initial Position
+            self.posxentm = ttk.Entry(self.paramultpart, width=10)
+            self.posxentm.insert(0, '0-5')
+            self.posyentm = ttk.Entry(self.paramultpart, width=10)
+            self.posyentm.insert(0, '0-0')
+            self.poszentm = ttk.Entry(self.paramultpart, width=10)
+            self.poszentm.insert(0, '0-0')
             # Run Button
             self.RunButton1m = ttk.Button(self.paramultpart, text='Run',
                                           command=self.RunThis2m)
@@ -235,6 +260,21 @@ class Controlset(Manips):
             self.multselanglea = ttk.Combobox(self.paramultpart, values=self.multselval,
                                               textvariable=self.multpartslcanglea)
             self.multselanglea.set('Range')
+            # Position X
+            self.multpartslcposx = tki.StringVar(self.paramultpart)
+            self.multselposx = ttk.Combobox(self.paramultpart, values=self.multselval,
+                                            textvariable=self.multpartslcposx)
+            self.multselposx.set('Range')
+            # Position Y
+            self.multpartslcposy = tki.StringVar(self.paramultpart)
+            self.multselposy = ttk.Combobox(self.paramultpart, values=self.multselval,
+                                            textvariable=self.multpartslcposy)
+            self.multselposy.set('Range')
+            # Position Z
+            self.multpartslcposz = tki.StringVar(self.paramultpart)
+            self.multselposz = ttk.Combobox(self.paramultpart, values=self.multselval,
+                                            textvariable=self.multpartslcposz)
+            self.multselposz.set('Range')
 
             # Creating labels next to corresponding entry-boxes
             self.partnumlabm = ttk.Label(self.paramultpart, text='Number of particles')
@@ -243,6 +283,9 @@ class Controlset(Manips):
             self.vellabm = ttk.Label(self.paramultpart, text='Velocity in m/s')
             self.angleelabm = ttk.Label(self.paramultpart, text='Elevation in deg°')
             self.anglealabm = ttk.Label(self.paramultpart, text='Azimuth in deg° (3D)')
+            self.posxlabm = ttk.Label(self.paramultpart, text='Initial X-Position in m')
+            self.posylabm = ttk.Label(self.paramultpart, text='Initial Y-Position in m')
+            self.poszlabm = ttk.Label(self.paramultpart, text='Initial Z-Position in m')
 
             # Positioning
             self.partnumlabm.grid(row=0, column=0, sticky="W")
@@ -257,12 +300,21 @@ class Controlset(Manips):
             self.angleeentm.grid(row=4, column=2, sticky="E")
             self.anglealabm.grid(row=5, column=0, sticky="W")
             self.angleaentm.grid(row=5, column=2, sticky="E")
+            self.posxlabm.grid(row=6, column=0, sticky="W")
+            self.posxentm.grid(row=6, column=2, sticky="E")
+            self.posylabm.grid(row=7, column=0, sticky="W")
+            self.posyentm.grid(row=7, column=2, sticky="E")
+            self.poszlabm.grid(row=8, column=0, sticky="W")
+            self.poszentm.grid(row=8, column=2, sticky="E")
             self.multselrhop.grid(row=1, column=1, sticky="W")
             self.multseldp.grid(row=2, column=1, sticky="W")
             self.multselvel.grid(row=3, column=1, sticky="W")
             self.multselanglee.grid(row=4, column=1, sticky="W")
             self.multselanglea.grid(row=5, column=1, sticky="W")
-            self.RunButton1m.grid(row=6, column=0, sticky="SW")
+            self.multselposx.grid(row=6, column=1, sticky="W")
+            self.multselposy.grid(row=7, column=1, sticky="W")
+            self.multselposz.grid(row=8, column=1, sticky="W")
+            self.RunButton1m.grid(row=9, column=0, sticky="SW")
             self.RunButton1m.bind('<Return>', self.RunThis2m)
 
             ### Configuration
@@ -273,7 +325,7 @@ class Controlset(Manips):
             self.solframe = ttk.LabelFrame(self.paraconfig, text='Solver')
             # Precision
             self.precent = ttk.Entry(self.solframe, validate='key', validatecommand=vcmd, width=10)
-            self.precent.insert(0, 2000)
+            self.precent.insert(0, 500)
             # Duration
             self.durationent = ttk.Entry(self.solframe, validate='key', validatecommand=vcmd, width=10)
             self.durationent.insert(0, 0)

@@ -25,7 +25,6 @@
 ## Die Betrachtungsdauer wird für kleine Partikel über die Relaxationszeit abgeschätz. Bei großen Partikeln
 ## oder für Betrachtungsdauer über den Umkehrzeitpunkt nach Newton angepasst. 
 ## Eine Überlagerung mit einer Luftströmung ist bisher nur für die Gekoppelte Variante nach Morrison integriert.
-## Beim Speichern als pdf kommt es zu Fehlern. Hier liegen Fehler bei Octave vor.
 ## Die Ergebnisse werden bisher als richtig angenommen. Oft sind unerwartete Werte das Resultat von Ungenauigkeiten oder der Effekt der
 ## getrennten Betrachtung einer gekoppelten Differentialgleichung.
 
@@ -34,6 +33,8 @@ function [ dat1,dat2 ] = Wurfp3(vars)
 ## Variablen und Konstanten bestimmten
 	%vars(1),vars(2),vars(3),vars(4),vars(5),vars(6),vars(7),vars(8),vars(9),vars(10),vars(11).
 	% rhop  ,dp     ,V      ,alpha  ,steps  ,durat  ,windx  ,windy  ,rhog   ,eta     ,grav
+	%vars(12),vars(13)
+	%posx    ,posy
 	rhop=2900;																%Dichte des Partikels in kg/qm
     rhop=vars(1);															%Dichte des Fluides in kg/qm
     rhog=1.205;
@@ -61,7 +62,9 @@ function [ dat1,dat2 ] = Wurfp3(vars)
 	Vx=V.*cos(alpha);														%Berechnung X-Anteil der Abschussgeschwindigkeit
 	Vy=V.*sin(alpha);														%Berechnung Y-Anteil der Abschussgeschwindigkeit
 	x_0=0;																	%Bereits zurückgelegter Anfangsweg X-Achse
+	x_0=vars(12);
 	y_0=0;																	%Bereits zurückgelegter Anfangsweg Y-Achse
+	y_0=vars(13);
 	Vx																		%Ausgabe Vx (Kontrolle)
 	Vy																		%Ausgabe Vy (Kontrolle)
 	V_0=[Vx,Vy,x_0,y_0];													%Anfangsvektors für gekoppelte DGL

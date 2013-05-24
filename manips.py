@@ -85,6 +85,8 @@ class Manips(object):
             self.checknewton.state(['!disabled'])
             self.checkstokes.state(['!disabled'])
             self.windyent.state(['disabled'])
+            self.posyentm.state(['disabled'])
+            self.posyent.state(['disabled'])
             self.drawselectmview.grid_forget()
             self.drawselectm.grid(row=0, column=0, columnspan=2, sticky="NSWE")
         else:
@@ -97,6 +99,8 @@ class Manips(object):
             self.checknewton.state(['disabled'])
             self.checkstokes.state(['disabled'])
             self.windyent.state(['!disabled'])
+            self.posyentm.state(['!disabled'])
+            self.posyent.state(['!disabled'])
             self.drawselectmview.grid(row=0, column=0,
                                       columnspan=2, sticky="NSWE")
             self.drawselectm.grid_forget()
@@ -133,6 +137,8 @@ class Manips(object):
             self.grav = float(self.gravent.get())
             self.windx = float(self.windxent.get())
             self.windz = float(self.windzent.get())
+            self.posx = float(self.posxent.get())
+            self.posz = float(self.poszent.get())
             if self.set3dstatevar == 0:  # If 2D Mode
                 self.currentdata = 1  # Current Data is single particle 2D
                 # Inform user about the configuration.
@@ -143,15 +149,17 @@ class Manips(object):
                                "Gravity %s \nFluid Density set to %s\n"\
                                "Horizontal Wind: %.2f m/s\n"\
                                "Vertical Wind: %.2f m/s\n"\
+                               "Initial Coordinates: %.2f horizontal %.2f vertical\n"\
                                "Calculations running, please wait ... \n" \
                                % (self.rhop, self.dp, self.v, self.anglee,
                                   self.prec, self.duration, self.grav, self.rhog,
-                                  self.windx, self.windz)
+                                  self.windx, self.windz, self.posx, self.posz)
             else:  # We are in 3D
                 self.currentdata = 2  # Current Data is single particle 3D
                 # In 3D we have two more options
                 self.anglea = float(self.angleaent.get())
                 self.windy = float(self.windyent.get())
+                self.posy = float(self.posyent.get())
                 # Inform user about the configuration.
                 self.entries = "Density: %.2f kg/m³ \n"\
                                "Particle size: %.2f µm\n" \
@@ -161,10 +169,12 @@ class Manips(object):
                                "Gravity %s \nFluid Density set to %s\n"\
                                "Wind in X: %.2f m/s\nWind in Y : %.2f m/s\n"\
                                "Wind in Z: %.2f m/s\n"\
+                               "Initial Coordinates: %.2f x, %.2f y, horizontal\n"\
+                               "%.2f z vertical\n"\
                                "Calculations running, please wait ... \n" \
                                % (self.rhop, self.dp, self.v, self.anglee, self.anglea,
                                   self.prec, self.duration,  self.grav, self.rhog,
-                                  self.windx, self.windy, self.windz)
+                                  self.windx, self.windy, self.windz, self.posx, self.posy, self.posz)
 
         except ValueError:  # If reading the input fields failes
             self.message = "No valid values entered\n"
@@ -178,13 +188,14 @@ class Manips(object):
         if self.set3dstatevar == 0:  # In 2D Mode
             CL = Calculate(self, self.rhop, self.rhog, self.dp, self.v, self.anglee,
                            self.prec, self.duration, self.eta, self.grav,
-                           self.windx, self.windz)
+                           self.windx, self.windz, self.posx, self.posz)
             # Starts the new thread and the actual calculation
             CL.start()
         else:  # In 3D Mode
             CL = Calculate3D(self, self.rhop, self.dp, self.v, self.anglee,
                              self.anglea, self.prec, self.duration, self.windx,
-                             self.windy, self.windz, self.rhog, self.eta, self.grav)
+                             self.windy, self.windz, self.rhog, self.eta, self.grav,
+                             self.posx, self.posy, self.posz)
             # Starts the new thread and the actual calculation
             CL.start()
 
@@ -204,6 +215,10 @@ class Manips(object):
             self.v = self.ingen(self.multpartslcvel.get(), self.vraw)
             self.angleeraw = tuple(map(float, self.angleeentm.get().split('-')))
             self.anglee = self.ingen(self.multpartslcanglee.get(), self.angleeraw)
+            self.posxraw = tuple(map(float, self.posxentm.get().split('-')))
+            self.posx = self.ingen(self.multpartslcposx.get(), self.posxraw)
+            self.poszraw = tuple(map(float, self.poszentm.get().split('-')))
+            self.posz = self.ingen(self.multpartslcposz.get(), self.poszraw)
             # The following values should rather be fixed and not randomized. 
             self.prec = float(self.precent.get())
             self.duration = float(self.durationent.get())
@@ -232,6 +247,8 @@ class Manips(object):
                 # Here we have two more options to read
                 self.anglearaw = tuple(map(float, self.angleaentm.get().split('-')))
                 self.anglea = self.ingen(self.multpartslcanglea.get(), self.anglearaw)
+                self.posyraw = tuple(map(float, self.posyentm.get().split('-')))
+                self.posy = self.ingen(self.multpartslcposy.get(), self.posyraw)
                 self.windy = float(self.windyent.get())
                 # Inform user about the configuration.
                 self.entries = "Density: %.2f to %.2f kg/m³ \n"\
@@ -266,7 +283,7 @@ class Manips(object):
                 self.dataset.append((self.rhop[x], self.dp[x], self.v[x],
                                     self.anglee[x], self.prec, self.duration,
                                     self.windx, self.windz, self.rhog, self.eta,
-                                    self.grav))
+                                    self.grav, self.posx[x], self.posz[x]))
         else:  # In 3D Mode (with more options)
             n = int(self.partnumentm.get())
             self.dataset = []
@@ -275,7 +292,8 @@ class Manips(object):
                 self.dataset.append((self.rhop[x], self.dp[x], self.v[x],
                                     self.anglee[x], self.anglea[x], self.prec,
                                     self.duration, self.windx, self.windy,
-                                    self.windz, self.rhog, self.eta, self.grav))
+                                    self.windz, self.rhog, self.eta, self.grav,
+                                    self.posx[x], self.posy[x], self.posz[x]))
         # These datasets need to be sent to Octave individually
         # But first we prepare the canvas for a new drawing
         self.f.clf()
