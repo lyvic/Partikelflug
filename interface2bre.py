@@ -146,13 +146,13 @@ class Controlset(Manips):
             self.rhopent.insert(0, 7800)
             # diameter
             self.dpent = ttk.Entry(self.parasingpart, validate='key', validatecommand=vcmd, width=10)
-            self.dpent.insert(0, 200)
+            self.dpent.insert(0, 900)
             # velocity
             self.velent = ttk.Entry(self.parasingpart, validate='key', validatecommand=vcmd, width=10)
-            self.velent.insert(0, 6)
+            self.velent.insert(0, 9)
             # angle elevation
             self.angleeent = ttk.Entry(self.parasingpart, validate='key', validatecommand=vcmd, width=10)
-            self.angleeent.insert(0, 35)
+            self.angleeent.insert(0, 80)
             # angle azimut
             self.angleaent = ttk.Entry(self.parasingpart, validate='key', validatecommand=vcmd, width=10)
             self.angleaent.insert(0, 30)
@@ -203,27 +203,27 @@ class Controlset(Manips):
             ## Elements
             # Number of particles
             self.partnumentm = ttk.Entry(self.paramultpart, width=10)
-            self.partnumentm.insert(0, 10)
+            self.partnumentm.insert(0, 20)
             # Density
             self.rhopentm = ttk.Entry(self.paramultpart, width=10)
             self.rhopentm.insert(0, '2900-2900')
             # diameter
             self.dpentm = ttk.Entry(self.paramultpart, width=10)
-            self.dpentm.insert(0, '500-500')
+            self.dpentm.insert(0, '1000-1000')
             # velocity
             self.velentm = ttk.Entry(self.paramultpart, width=10)
-            self.velentm.insert(0, '5-5')
+            self.velentm.insert(0, '15-15')
             # angle lift
             self.angleeentm = ttk.Entry(self.paramultpart, width=10)
-            self.angleeentm.insert(0, '5-5')
+            self.angleeentm.insert(0, '20-50')
             # angle turn
             self.angleaentm = ttk.Entry(self.paramultpart, width=10)
-            self.angleaentm.insert(0, '5-5')
+            self.angleaentm.insert(0, '0-0')
             # Initial Position
             self.posxentm = ttk.Entry(self.paramultpart, width=10)
-            self.posxentm.insert(0, '0-5')
+            self.posxentm.insert(0, '0-0')
             self.posyentm = ttk.Entry(self.paramultpart, width=10)
-            self.posyentm.insert(0, '0-0')
+            self.posyentm.insert(0, '0-3')
             self.poszentm = ttk.Entry(self.paramultpart, width=10)
             self.poszentm.insert(0, '0-0')
             # Run Button
@@ -325,10 +325,10 @@ class Controlset(Manips):
             self.solframe = ttk.LabelFrame(self.paraconfig, text='Solver')
             # Precision
             self.precent = ttk.Entry(self.solframe, validate='key', validatecommand=vcmd, width=10)
-            self.precent.insert(0, 500)
+            self.precent.insert(0, 200)
             # Duration
             self.durationent = ttk.Entry(self.solframe, validate='key', validatecommand=vcmd, width=10)
-            self.durationent.insert(0, 0)
+            self.durationent.insert(0, 3)
             # Box for Wind entries
             self.windbox = ttk.Frame(self.enviframe)
             # Wind in X

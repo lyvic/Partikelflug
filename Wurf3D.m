@@ -113,7 +113,7 @@ function [ dat1,dat2 ] = Wurf3D(vars)
 ## Gekoppelte Bewegungsgleichung lösen	
     odeopt=odeset('MaxStep',10,'InitialStep',1E-06);						    %Konfiguration des ode45-Solvers
     odeopt2=odeset('MaxStep',10,'InitialStep',1E-06,'RelTol',1E-06,'AbsTol',1E-06);
-    [ngt,r]=ode23(@Vts3D,[tspan],V_0,odeopt,rhop,rhog,grav,eta,dp,windx,windy,windz,k,c,m);		%Lösen der Gekoppelten DGL
+    [ngt,r]=ode45(@Vts3D,[tspan],V_0,odeopt,rhop,rhog,grav,eta,dp,windx,windy,windz,k,c,m);		%Lösen der Gekoppelten DGL
     %    Vx   ;Vy   ;Vz   ;X    ;Y    ;Z
     printf("Gekoppelte DGL fertig \n");
     ngxs=r(:,1);
@@ -122,7 +122,7 @@ function [ dat1,dat2 ] = Wurf3D(vars)
     ngxp=r(:,4);
     ngyp=r(:,5);
     ngzp=r(:,6);
-    [nusvt,nusvi]=ode23(@Vtsv,[0,duration],[1E-08,0],odeopt2,rhop,rhog,grav,eta,dp,k,c,m);
+    [nusvt,nusvi]=ode45(@Vtsv,[0,duration],[1E-08,0],odeopt2,rhop,rhog,grav,eta,dp,k,c,m);
     nusv=nusvi(end,1);
     
     dat1=[ngt,ngxs,ngys,ngzs,ngxp,ngyp,ngzp];

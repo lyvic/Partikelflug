@@ -56,7 +56,7 @@ class Calculate3D(threading.Thread):
                     self.anglee, self.anglea, self.prec, self.duration,
                     self.windx, self.windy, self.windz, self.rhog,
                     self.eta, self.grav, self.posx, self.posy, self.posz],
-                    verbose=True)
+                    verbose=False)
         print 'Done! Data from Octave available - mode 3D'
         self.guest.myplot(1, self.y[:, 4], self.y[:, 5], 'XDistance in [m]',
                           'YDistance in [m]', self.y[:, 6], 'ZHeight in [m]',
@@ -155,7 +155,7 @@ class Calculate(threading.Thread):
             oc.call('Wurfp3.m', [self.rhop, self.dp, self.v,
                     self.angle, self.prec, self.duration,
                     self.windx, self.windy, self.rhog,
-                    self.eta, self.grav, self.posx, self.posz], verbose=True)
+                    self.eta, self.grav, self.posx, self.posz], verbose=False)
         print 'Done! Data from Octave available'
         self.guest.myplot(0, self.y[:, 0], self.y[:, 1], 'Time in [s]',
                           'Speed in [m/s]', pttl='Speed-Time-Horizontal')

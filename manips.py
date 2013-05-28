@@ -393,11 +393,6 @@ class Manips(object):
         if self.set3dstatevar == 1:  # In 3D Mode
             self.viewin = self.view.get()
             self.msgboard('View: '+self.viewin+'\n')
-            # self.info.config(state=tki.NORMAL)
-            # self.viewid = str(self.viewopt[self.viewin])
-            # self.info.insert(tki.END, 'View: '+self.viewin+'\n')
-            # self.info.yview(tki.END)
-            # self.info.config(state=tki.DISABLED)
             if self.currentdata == 2:  # If single particle 2D
                 # Plot the corresponding data
                 if self.viewopt[self.viewin][0] == 0:  # means X View
@@ -452,11 +447,6 @@ class Manips(object):
             try:
                 self.linesin = self.lines.get()
                 self.msgboard('Drawing: '+self.linesin+'\n')
-                # self.info.config(state=tki.NORMAL)
-                # self.drawid = str(self.drawopt[self.linesin])
-                # self.info.insert(tki.END, 'Drawing: '+self.linesin+'\n')
-                # self.info.yview(tki.END)
-                # self.info.config(state=tki.DISABLED)
                 self.plotx = self.drawopt[self.linesin][0]
                 self.ploty = self.drawopt[self.linesin][1]
                 self.titlexax = self.drawopt[self.linesin][2]
@@ -557,7 +547,7 @@ class Manips(object):
                 self.a.grid(True)
             else:
                 self.a.grid(False)
-            self.Paper.show()
+            # self.Paper.show()
         except AttributeError:
             print "No plot shown"
 
@@ -570,7 +560,7 @@ class Manips(object):
         self.viewset = self.view.get()
         # In 3D Mode Corner View:
         if self.set3dstatevar == 1 and self.viewopt[self.viewset][0] == 35:
-            try:  # Reading the input
+            #try:  # Reading the input
                 self.x1 = float(self.xaxisscalef.get())
                 self.x2 = float(self.xaxisscalet.get())
                 self.y1 = float(self.yaxisscalef.get())
@@ -579,7 +569,7 @@ class Manips(object):
                 self.z2 = float(self.zaxisscalet.get())
                 if self.currentdata == 2:  # Single Particle 3D mode
                     # Has to undergo manual clipping as the mplot3D library
-                    # Is not capable enough to properly display the lines
+                    # is not capable enough to properly display the lines
                     xclip, yclip, zclip =\
                         self.manclip(Calculate3D.y[:, 4]*1, Calculate3D.y[:, 5]*1,
                                      Calculate3D.y[:, 6]*1, (self.x1, self.x2),
@@ -589,6 +579,11 @@ class Manips(object):
                     self.myplot(1, xclip, yclip, 'XDistance in [m]',
                                 'YDistance in [m]', zttl='ZHeight in [m]',
                                 zdat=zclip, pttl='Trajectory')
+                    self.plotintersect(Calculate3D.y[:, 4]*1, Calculate3D.y[:, 5]*1,
+                                       Calculate3D.y[:, 6]*1, (self.x1, self.x2),
+                                       (self.y1, self.y2),
+                                       (self.z1, self.z2))
+
                 if self.currentdata == 4:  # Multiple Particle 3D
                     # Has to undergo manual clipping as the mplot3D library
                     # Is not capable enough to properly display the lines
@@ -603,6 +598,12 @@ class Manips(object):
                     self.myplot(1, xclip, yclip, 'XDistance in [m]',
                                 'YDistance in [m]', zttl='ZHeight in [m]',
                                 zdat=zclip, pttl='Trajectory')
+                    self.plotintersect(self.multires[0][0][:, 4]*1,
+                                       self.multires[0][0][:, 5]*1,
+                                       self.multires[0][0][:, 6]*1,
+                                       (self.x1, self.x2),
+                                       (self.y1, self.y2),
+                                       (self.z1, self.z2))
                     # plotting all other lines of the dataset
                     for i in range(1, int(self.partnumentm.get())):
                         xclip, yclip, zclip =\
@@ -612,16 +613,23 @@ class Manips(object):
                                          (self.x1, self.x2),
                                          (self.y1, self.y2),
                                          (self.z1, self.z2))
+                        self.plotintersect(self.multires[i][0][:, 4]*1,
+                                           self.multires[i][0][:, 5]*1,
+                                           self.multires[i][0][:, 6]*1,
+                                           (self.x1, self.x2),
+                                           (self.y1, self.y2),
+                                           (self.z1, self.z2))
                         self.a.plot(xclip, yclip, zclip)
                 # Finally, set the scale
                 self.a.set_zlim(self.z1, self.z2)
                 self.a.set_xlim(self.x1, self.x2)
                 self.a.set_ylim(self.y1, self.y2)
-            except ValueError:
-                # If the values can't be converted to a float
-                print "Something is wrong with the axis fields"
-                pass
-        else:  # This not 3D Mode and no corner view
+                self.Paper.show()
+            # except ValueError:
+            #     # If the values can't be converted to a float
+            #     print "Something is wrong with the axis fields"
+            #     pass
+        else:  # Not 3D Mode and no corner view
             try:  # then it's simple since we need no manual clipping or anything
                 self.x1 = float(self.xaxisscalef.get())
                 self.x2 = float(self.xaxisscalet.get())
@@ -629,11 +637,11 @@ class Manips(object):
                 self.y2 = float(self.yaxisscalet.get())
                 self.a.set_xlim(self.x1, self.x2)
                 self.a.set_ylim(self.y1, self.y2)
+                self.Paper.show()
             except ValueError:
-                # Bad input in the axis fields: strings or similar things. 
+                # Bad input in the axis fields: strings or similar things.
                 print "Something is wrong with the axis fields"
                 pass
-        self.Paper.show()
         print "Set axis"
 
     def validate(self, action, index, value_if_allowed, prior_value, text,
@@ -681,33 +689,91 @@ class Manips(object):
             self.a.mouse_init()
         else:
             self.a.plot(xdat, ydat, color='red')
-        self.DrawGrid()
+        # self.DrawGrid()
         return
 
     # Manual clipping for the screwed up view in mplot3D
     def manclip(self, xdat, ydat, zdat, xlim, ylim, zlim):
-        #clipping manually
+        # Clipping manually
+        # Find intersections
+        xdatre = 1*xdat
+        ydatre = 1*ydat
+        zdatre = 1*zdat
+
         for i in nm.arange(len(xdat)):
             if xdat[i] < xlim[0]:
-                xdat[i] = nm.NaN
+                xdatre[i] = nm.NaN
             if xdat[i] > xlim[1]:
-                xdat[i] = nm.NaN
+                xdatre[i] = nm.NaN
             else:
                 pass
 
         for i in nm.arange(len(ydat)):
             if ydat[i] < ylim[0]:
-                ydat[i] = nm.NaN
+                ydatre[i] = nm.NaN
             if ydat[i] > ylim[1]:
-                ydat[i] = nm.NaN
+                ydatre[i] = nm.NaN
             else:
                 pass
-
         for i in nm.arange(len(zdat)):
             if zdat[i] < zlim[0]:
-                zdat[i] = nm.NaN
+                zdatre[i] = nm.NaN
             if zdat[i] > zlim[1]:
-                zdat[i] = nm.NaN
+                zdatre[i] = nm.NaN
             else:
                 pass
-        return xdat, ydat, zdat
+        return xdatre, ydatre, zdatre
+
+    # Manual clipping for the screwed up view in mplot3D
+    def intersect(self, adat, xdat, ydat, zdat, alim):
+        # Clipping manually
+        # Find intersection in a range
+        # Pull down intersection points to lower limit, so zero crossing occurs
+        asecd = adat - alim[0]
+        # Signum for positiv-negative. Diff for signchange (0 non, 2 or -2 for change)
+        # Where gives back the indices where an array is 0 (default)
+        zero_crossings = nm.where(nm.diff(nm.sign(asecd)))[0]
+        # Transfer to points
+        sects0 = []
+        sects1 = []
+        # Read out corresponding points and store in sects
+        for i in nm.arange(len(zero_crossings)):
+            sects0.append((xdat[zero_crossings[i]], ydat[zero_crossings[i]], zdat[zero_crossings[i]]))
+            sects0.append((xdat[zero_crossings[i]+1], ydat[zero_crossings[i]+1], zdat[zero_crossings[i]+1]))
+        # Same procedure for upper limits
+        asecu = adat - alim[1]
+        zero_crossings = nm.where(nm.diff(nm.sign(asecu)))[0]
+        for i in nm.arange(len(zero_crossings)):
+            sects1.append((xdat[zero_crossings[i]], ydat[zero_crossings[i]], zdat[zero_crossings[i]]))
+            sects1.append((xdat[zero_crossings[i]+1], ydat[zero_crossings[i]+1], zdat[zero_crossings[i]+1]))
+        return sects0, sects1
+
+    def plotintersect(self, xdat, ydat, zdat, xlim, ylim, zlim):
+        xsects0, xsects1 = self.intersect(xdat, xdat, ydat, zdat, xlim)
+        ysects0, ysects1 = self.intersect(ydat, xdat, ydat, zdat, ylim)
+        zsects0, zsects1 = self.intersect(zdat, xdat, ydat, zdat, zlim)
+        Xsects = self.sectvect(xsects0, xsects1, xlim, 0)
+        Ysects = self.sectvect(ysects0, ysects1, ylim, 1)
+        Zsects = self.sectvect(zsects0, zsects1, zlim, 2)
+        for i in range(0, len(Xsects)):
+            self.a.scatter(Xsects[i][0], Xsects[i][1], Xsects[i][2], marker='o', color='b')
+        for i in range(0, len(Ysects)):
+            self.a.scatter(Ysects[i][0], Ysects[i][1], Ysects[i][2], marker='o', color='r')
+        for i in range(0, len(Zsects)):
+            self.a.scatter(Zsects[i][0], Zsects[i][1], Zsects[i][2], marker='o', color='g')
+
+    def sectvect(self, asects0, asects1, alim, axis):
+        Asects = []
+        for i in range(0, len(asects0), 2):
+            a = [asects0[i][0], asects0[i][1], asects0[i][2]]
+            b = [asects0[i+1][0], asects0[i+1][1], asects0[i+1][2]]
+            vect = nm.subtract(a, b)
+            x = (alim[0]-a[axis])/vect[axis]
+            Asects.append(a + x*vect)
+        for i in range(0, len(asects1), 2):
+            a = [asects1[i][0], asects1[i][1], asects1[i][2]]
+            b = [asects1[i+1][0], asects1[i+1][1], asects1[i+1][2]]
+            vect = nm.subtract(a, b)
+            x = (alim[1]-a[axis])/vect[axis]
+            Asects.append(a + x*vect)
+        return Asects
