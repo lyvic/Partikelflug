@@ -45,7 +45,7 @@ class Calculate3D(threading.Thread):
         print windz
 
     def decimalize(self, numin):
-        decout = dc.Decimal(numin).quantize(dc.Decimal('.001'),
+        decout = dc.Decimal(numin).quantize(dc.Decimal('.000001'),
                                             rounding=dc.ROUND_HALF_DOWN)
         return decout
 

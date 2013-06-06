@@ -393,7 +393,7 @@ class Manips(object):
         if self.set3dstatevar == 1:  # In 3D Mode
             self.viewin = self.view.get()
             self.msgboard('View: '+self.viewin+'\n')
-            if self.currentdata == 2:  # If single particle 2D
+            if self.currentdata == 2:  # If single particle 3D
                 # Plot the corresponding data
                 if self.viewopt[self.viewin][0] == 0:  # means X View
                     self.myplot(0, Calculate3D.y[:, 4], Calculate3D.y[:, 6],
@@ -558,39 +558,35 @@ class Manips(object):
         """Scaling is quite important for a good data interpretation.
         So I made it very accessible in here"""
         self.viewset = self.view.get()
+        try:  # Reading the input
+            self.x1 = float(self.xaxisscalef.get())
+            self.x2 = float(self.xaxisscalet.get())
+            self.y1 = float(self.yaxisscalef.get())
+            self.y2 = float(self.yaxisscalet.get())
+            self.z1 = float(self.zaxisscalef.get())
+            self.z2 = float(self.zaxisscalet.get())
         # In 3D Mode Corner View:
-        if self.set3dstatevar == 1 and self.viewopt[self.viewset][0] == 35:
-            #try:  # Reading the input
-                self.x1 = float(self.xaxisscalef.get())
-                self.x2 = float(self.xaxisscalet.get())
-                self.y1 = float(self.yaxisscalef.get())
-                self.y2 = float(self.yaxisscalet.get())
-                self.z1 = float(self.zaxisscalef.get())
-                self.z2 = float(self.zaxisscalet.get())
+            if self.set3dstatevar == 1 and self.viewopt[self.viewset][0] == 35:
                 if self.currentdata == 2:  # Single Particle 3D mode
                     # Has to undergo manual clipping as the mplot3D library
                     # is not capable enough to properly display the lines
+                    xdat = Calculate3D.y[:, 4]*1
+                    ydat = Calculate3D.y[:, 5]*1
+                    zdat = Calculate3D.y[:, 6]*1
+                    xdat, ydat, zdat = self.intersect(xdat, xdat, ydat, zdat,
+                                                      self.x1, 0)
+                    xdat, ydat, zdat = self.intersect(xdat, xdat, ydat, zdat,
+                                                      self.x2, 0)
+                    xdat, ydat, zdat = self.intersect(ydat, xdat, ydat, zdat,
+                                                      self.y1, 1)
+                    xdat, ydat, zdat = self.intersect(ydat, xdat, ydat, zdat,
+                                                      self.y2, 1)
+                    xdat, ydat, zdat = self.intersect(zdat, xdat, ydat, zdat,
+                                                      self.z1, 2)
+                    xdat, ydat, zdat = self.intersect(zdat, xdat, ydat, zdat,
+                                                      self.z2, 2)
                     xclip, yclip, zclip =\
-                        self.manclip(Calculate3D.y[:, 4]*1, Calculate3D.y[:, 5]*1,
-                                     Calculate3D.y[:, 6]*1, (self.x1, self.x2),
-                                     (self.y1, self.y2),
-                                     (self.z1, self.z2))
-                    # plotting processed data
-                    self.myplot(1, xclip, yclip, 'XDistance in [m]',
-                                'YDistance in [m]', zttl='ZHeight in [m]',
-                                zdat=zclip, pttl='Trajectory')
-                    self.plotintersect(Calculate3D.y[:, 4]*1, Calculate3D.y[:, 5]*1,
-                                       Calculate3D.y[:, 6]*1, (self.x1, self.x2),
-                                       (self.y1, self.y2),
-                                       (self.z1, self.z2))
-
-                if self.currentdata == 4:  # Multiple Particle 3D
-                    # Has to undergo manual clipping as the mplot3D library
-                    # Is not capable enough to properly display the lines
-                    xclip, yclip, zclip =\
-                        self.manclip(self.multires[0][0][:, 4]*1,
-                                     self.multires[0][0][:, 5]*1,
-                                     self.multires[0][0][:, 6]*1,
+                        self.manclip(xdat, ydat, zdat,
                                      (self.x1, self.x2),
                                      (self.y1, self.y2),
                                      (self.z1, self.z2))
@@ -598,50 +594,166 @@ class Manips(object):
                     self.myplot(1, xclip, yclip, 'XDistance in [m]',
                                 'YDistance in [m]', zttl='ZHeight in [m]',
                                 zdat=zclip, pttl='Trajectory')
-                    self.plotintersect(self.multires[0][0][:, 4]*1,
-                                       self.multires[0][0][:, 5]*1,
-                                       self.multires[0][0][:, 6]*1,
-                                       (self.x1, self.x2),
-                                       (self.y1, self.y2),
-                                       (self.z1, self.z2))
+                if self.currentdata == 4:  # Multiple Particle 3D
+                    # Has to undergo manual clipping as the mplot3D library
+                    # Is not capable enough to properly display the lines
+                    xdat = self.multires[0][0][:, 4]*1
+                    ydat = self.multires[0][0][:, 5]*1
+                    zdat = self.multires[0][0][:, 6]*1
+                    xdat, ydat, zdat = self.intersect(xdat, xdat, ydat, zdat,
+                                                      self.x1, 0)
+                    xdat, ydat, zdat = self.intersect(xdat, xdat, ydat, zdat,
+                                                      self.x2, 0)
+                    xdat, ydat, zdat = self.intersect(ydat, xdat, ydat, zdat,
+                                                      self.y1, 1)
+                    xdat, ydat, zdat = self.intersect(ydat, xdat, ydat, zdat,
+                                                      self.y2, 1)
+                    xdat, ydat, zdat = self.intersect(zdat, xdat, ydat, zdat,
+                                                      self.z1, 2)
+                    xdat, ydat, zdat = self.intersect(zdat, xdat, ydat, zdat,
+                                                      self.z2, 2)
+                    xclip, yclip, zclip =\
+                        self.manclip(xdat, ydat, zdat,
+                                     (self.x1, self.x2),
+                                     (self.y1, self.y2),
+                                     (self.z1, self.z2))
+                    # plotting processed data
+                    self.myplot(1, xclip, yclip, 'XDistance in [m]',
+                                'YDistance in [m]', zttl='ZHeight in [m]',
+                                zdat=zclip, pttl='Trajectory')
                     # plotting all other lines of the dataset
                     for i in range(1, int(self.partnumentm.get())):
+                        xdat = self.multires[i][0][:, 4]*1
+                        ydat = self.multires[i][0][:, 5]*1
+                        zdat = self.multires[i][0][:, 6]*1
+                        xdat, ydat, zdat = self.intersect(xdat, xdat, ydat, zdat,
+                                                          self.x1, 0)
+                        xdat, ydat, zdat = self.intersect(xdat, xdat, ydat, zdat,
+                                                          self.x2, 0)
+                        xdat, ydat, zdat = self.intersect(ydat, xdat, ydat, zdat,
+                                                          self.y1, 1)
+                        xdat, ydat, zdat = self.intersect(ydat, xdat, ydat, zdat,
+                                                          self.y2, 1)
+                        xdat, ydat, zdat = self.intersect(zdat, xdat, ydat, zdat,
+                                                          self.z1, 2)
+                        xdat, ydat, zdat = self.intersect(zdat, xdat, ydat, zdat,
+                                                          self.z2, 2)
                         xclip, yclip, zclip =\
-                            self.manclip(self.multires[i][0][:, 4]*1,
-                                         self.multires[i][0][:, 5]*1,
-                                         self.multires[i][0][:, 6]*1,
+                            self.manclip(xdat, ydat, zdat,
                                          (self.x1, self.x2),
                                          (self.y1, self.y2),
                                          (self.z1, self.z2))
-                        self.plotintersect(self.multires[i][0][:, 4]*1,
-                                           self.multires[i][0][:, 5]*1,
-                                           self.multires[i][0][:, 6]*1,
-                                           (self.x1, self.x2),
-                                           (self.y1, self.y2),
-                                           (self.z1, self.z2))
                         self.a.plot(xclip, yclip, zclip)
-                # Finally, set the scale
+                    # Finally, set the scale
                 self.a.set_zlim(self.z1, self.z2)
                 self.a.set_xlim(self.x1, self.x2)
                 self.a.set_ylim(self.y1, self.y2)
-                self.Paper.show()
-            # except ValueError:
-            #     # If the values can't be converted to a float
-            #     print "Something is wrong with the axis fields"
-            #     pass
-        else:  # Not 3D Mode and no corner view
-            try:  # then it's simple since we need no manual clipping or anything
-                self.x1 = float(self.xaxisscalef.get())
-                self.x2 = float(self.xaxisscalet.get())
-                self.y1 = float(self.yaxisscalef.get())
-                self.y2 = float(self.yaxisscalet.get())
+            elif self.set3dstatevar == 1 and self.viewopt[self.viewset][0] != 35:
+                print "3D Mode, but 2D view"
+                if self.currentdata == 2:  # Single Particle 3D mode
+                    print "We have one particle in 3D"
+                    # Has to undergo manual clipping as the mplot3D library
+                    # is not capable enough to properly display the lines
+                    xdat = Calculate3D.y[:, 4]*1
+                    ydat = Calculate3D.y[:, 5]*1
+                    zdat = Calculate3D.y[:, 6]*1
+                    xdat, ydat, zdat = self.intersect(xdat, xdat, ydat, zdat,
+                                                      self.x1, 0)
+                    xdat, ydat, zdat = self.intersect(xdat, xdat, ydat, zdat,
+                                                      self.x2, 0)
+                    xdat, ydat, zdat = self.intersect(ydat, xdat, ydat, zdat,
+                                                      self.y1, 1)
+                    xdat, ydat, zdat = self.intersect(ydat, xdat, ydat, zdat,
+                                                      self.y2, 1)
+                    xdat, ydat, zdat = self.intersect(zdat, xdat, ydat, zdat,
+                                                      self.z1, 2)
+                    xdat, ydat, zdat = self.intersect(zdat, xdat, ydat, zdat,
+                                                      self.z2, 2)
+                    xclip, yclip, zclip =\
+                        self.manclip(xdat, ydat, zdat,
+                                     (self.x1, self.x2),
+                                     (self.y1, self.y2),
+                                     (self.z1, self.z2))
+                    # Plot the corresponding data
+                    if self.viewopt[self.viewin][0] == 0:  # means X View
+                        self.myplot(0, xclip, zclip,
+                                    'X Distance in [m]', 'Z Distance in [m]',
+                                    pttl='X-Z Trajecotry Projection')
+                        self.a.set_xlim(self.x1, self.x2)
+                        self.a.set_ylim(self.z1, self.z2)
+                    if self.viewopt[self.viewin][0] == 1:  # means Y View
+                        self.myplot(0, yclip, zclip,
+                                    'Y Distance in [m]', 'Z Distance in [m]',
+                                    pttl='Y-Z Trajecotry Projection')
+                        self.a.set_xlim(self.y1, self.y2)
+                        self.a.set_ylim(self.z1, self.z2)
+                    if self.viewopt[self.viewin][0] == 90:  # means Topview
+                        self.myplot(0, xclip, yclip,
+                                    'X Distance in [m]', 'Y Distance in [m]',
+                                    pttl='X-Y Trajecotry Projection')
+                        self.a.set_xlim(self.x1, self.x2)
+                        self.a.set_ylim(self.y1, self.y2)
+                if self.currentdata == 4:  # If multiple particle 3D Mode
+                    print "We are having a few particles in 3D"
+                    xclipm = []
+                    yclipm = []
+                    zclipm = []
+                    for i in range(0, int(self.partnumentm.get())):
+                        xdat = self.multires[i][0][:, 4]
+                        ydat = self.multires[i][0][:, 5]
+                        zdat = self.multires[i][0][:, 6]
+                        xdat, ydat, zdat = self.intersect(xdat, xdat, ydat, zdat,
+                                                          self.x1, 0)
+                        xdat, ydat, zdat = self.intersect(xdat, xdat, ydat, zdat,
+                                                          self.x2, 0)
+                        xdat, ydat, zdat = self.intersect(ydat, xdat, ydat, zdat,
+                                                          self.y1, 1)
+                        xdat, ydat, zdat = self.intersect(ydat, xdat, ydat, zdat,
+                                                          self.y2, 1)
+                        xdat, ydat, zdat = self.intersect(zdat, xdat, ydat, zdat,
+                                                          self.z1, 2)
+                        xdat, ydat, zdat = self.intersect(zdat, xdat, ydat, zdat,
+                                                          self.z2, 2)
+                        xclip, yclip, zclip =\
+                            self.manclip(xdat, ydat, zdat,
+                                         (self.x1, self.x2),
+                                         (self.y1, self.y2),
+                                         (self.z1, self.z2))
+                        xclipm.append(xclip)
+                        yclipm.append(yclip)
+                        zclipm.append(zclip)
+                    if self.viewopt[self.viewin][0] == 0:  # means X View
+                        self.myplot(0, xclipm[0], zclipm[0],
+                                    'X Distance in [m]', 'Z Distance in [m]',
+                                    pttl='X-Z Trajecotry Projection')
+                        for i in range(1, int(self.partnumentm.get())):
+                            self.a.plot(xclipm[i], zclipm[i])
+                        self.a.set_xlim(self.x1, self.x2)
+                        self.a.set_ylim(self.z1, self.z2)
+                    if self.viewopt[self.viewin][0] == 1:  # means Y View
+                        self.myplot(0, yclipm[0], zclipm[0],
+                                    'Y Distance in [m]', 'Z Distance in [m]',
+                                    pttl='Y-Z Trajecotry Projection')
+                        for i in range(1, int(self.partnumentm.get())):
+                            self.a.plot(yclipm[i], zclipm[i])
+                        self.a.set_xlim(self.y1, self.y2)
+                        self.a.set_ylim(self.z1, self.z2)
+                    if self.viewopt[self.viewin][0] == 90:  # means Topview
+                        self.myplot(0, xclipm[0], yclipm[0],
+                                    'X Distance in [m]', 'Y Distance in [m]',
+                                    pttl='X-Y Trajecotry Projection')
+                        for i in range(1, int(self.partnumentm.get())):
+                            self.a.plot(xclipm[i], yclipm[i])
+                        self.a.set_xlim(self.x1, self.x2)
+                        self.a.set_ylim(self.y1, self.y2)
+            else:  # Not 3D Mode and no corner view
+                print "something else"
                 self.a.set_xlim(self.x1, self.x2)
                 self.a.set_ylim(self.y1, self.y2)
-                self.Paper.show()
-            except ValueError:
-                # Bad input in the axis fields: strings or similar things.
-                print "Something is wrong with the axis fields"
-                pass
+            self.Paper.show()
+        except ValueError:
+            # If the values can't be converted to a float
+            print "Something is wrong with the axis fields"
         print "Set axis"
 
     def validate(self, action, index, value_if_allowed, prior_value, text,
@@ -702,65 +814,54 @@ class Manips(object):
 
         for i in nm.arange(len(xdat)):
             if xdat[i] < xlim[0]:
-                xdatre[i] = nm.NaN
+                xdatre[i], ydatre[i], zdatre[i] = [nm.NaN, nm.NaN, nm.NaN]
             if xdat[i] > xlim[1]:
-                xdatre[i] = nm.NaN
+                xdatre[i], ydatre[i], zdatre[i] = [nm.NaN, nm.NaN, nm.NaN]
             else:
                 pass
-
         for i in nm.arange(len(ydat)):
             if ydat[i] < ylim[0]:
-                ydatre[i] = nm.NaN
+                xdatre[i], ydatre[i], zdatre[i] = [nm.NaN, nm.NaN, nm.NaN]
             if ydat[i] > ylim[1]:
-                ydatre[i] = nm.NaN
+                xdatre[i], ydatre[i], zdatre[i] = [nm.NaN, nm.NaN, nm.NaN]
             else:
                 pass
         for i in nm.arange(len(zdat)):
             if zdat[i] < zlim[0]:
-                zdatre[i] = nm.NaN
+                xdatre[i], ydatre[i], zdatre[i] = [nm.NaN, nm.NaN, nm.NaN]
             if zdat[i] > zlim[1]:
-                zdatre[i] = nm.NaN
+                xdatre[i], ydatre[i], zdatre[i] = [nm.NaN, nm.NaN, nm.NaN]
             else:
                 pass
         return xdatre, ydatre, zdatre
 
     # Manual clipping for the screwed up view in mplot3D
-    def intersect(self, adat, xdat, ydat, zdat, alim):
+    def intersect(self, adat, xdat, ydat, zdat, alim, axis):
         # Clipping manually
         # Find intersection in a range
         # Pull down intersection points to lower limit, so zero crossing occurs
-        asecd = adat - alim[0]
+        asec = adat - alim
         # Signum for positiv-negative. Diff for signchange (0 non, 2 or -2 for change)
         # Where gives back the indices where an array is 0 (default)
-        zero_crossings = nm.where(nm.diff(nm.sign(asecd)))[0]
+        zero_crossings = nm.where(nm.diff(self.sign(asec)))[0]
         # Transfer to points
-        sects0 = []
-        sects1 = []
         # Read out corresponding points and store in sects
-        for i in nm.arange(len(zero_crossings)):
-            sects0.append((xdat[zero_crossings[i]], ydat[zero_crossings[i]], zdat[zero_crossings[i]]))
-            sects0.append((xdat[zero_crossings[i]+1], ydat[zero_crossings[i]+1], zdat[zero_crossings[i]+1]))
-        # Same procedure for upper limits
-        asecu = adat - alim[1]
-        zero_crossings = nm.where(nm.diff(nm.sign(asecu)))[0]
-        for i in nm.arange(len(zero_crossings)):
-            sects1.append((xdat[zero_crossings[i]], ydat[zero_crossings[i]], zdat[zero_crossings[i]]))
-            sects1.append((xdat[zero_crossings[i]+1], ydat[zero_crossings[i]+1], zdat[zero_crossings[i]+1]))
-        return sects0, sects1
-
-    def plotintersect(self, xdat, ydat, zdat, xlim, ylim, zlim):
-        xsects0, xsects1 = self.intersect(xdat, xdat, ydat, zdat, xlim)
-        ysects0, ysects1 = self.intersect(ydat, xdat, ydat, zdat, ylim)
-        zsects0, zsects1 = self.intersect(zdat, xdat, ydat, zdat, zlim)
-        Xsects = self.sectvect(xsects0, xsects1, xlim, 0)
-        Ysects = self.sectvect(ysects0, ysects1, ylim, 1)
-        Zsects = self.sectvect(zsects0, zsects1, zlim, 2)
-        for i in range(0, len(Xsects)):
-            self.a.scatter(Xsects[i][0], Xsects[i][1], Xsects[i][2], marker='o', color='b')
-        for i in range(0, len(Ysects)):
-            self.a.scatter(Ysects[i][0], Ysects[i][1], Ysects[i][2], marker='o', color='r')
-        for i in range(0, len(Zsects)):
-            self.a.scatter(Zsects[i][0], Zsects[i][1], Zsects[i][2], marker='o', color='g')
+        for i in nm.arange(len(zero_crossings)-1, -1, -1):
+            a = [xdat[zero_crossings[i]], ydat[zero_crossings[i]], zdat[zero_crossings[i]]]
+            b = [xdat[zero_crossings[i]+1], ydat[zero_crossings[i]+1], zdat[zero_crossings[i]+1]]
+            vect = nm.subtract(a, b)
+            x = (alim-a[axis])/vect[axis]
+            np = (a + x*vect)
+            # if axis == 0:
+            #     self.a.scatter(np[0], np[1], np[2], marker='o', color='r')
+            # if axis == 1:
+            #     self.a.scatter(np[0], np[1], np[2], marker='o', color='g')
+            # if axis == 2:
+            #     self.a.scatter(np[0], np[1], np[2], marker='o', color='m')
+            xdat = nm.insert(xdat, (zero_crossings[i]+1), np[0])
+            ydat = nm.insert(ydat, (zero_crossings[i]+1), np[1])
+            zdat = nm.insert(zdat, (zero_crossings[i]+1), np[2])
+        return xdat, ydat, zdat
 
     def sectvect(self, asects0, asects1, alim, axis):
         Asects = []
@@ -777,3 +878,11 @@ class Manips(object):
             x = (alim[1]-a[axis])/vect[axis]
             Asects.append(a + x*vect)
         return Asects
+
+    def sign(self, val):
+        for i in range(len(val)):
+            if val[i] < 0:
+                val[i] = -1
+            else:
+                val[i] = 1
+        return val
