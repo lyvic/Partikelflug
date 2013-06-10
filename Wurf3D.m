@@ -68,6 +68,15 @@ function [ dat1,dat2 ] = Wurf3D(vars)
 	Vx=V.*cos(alpha).*cos(beta);											%Berechnung X-Anteil der Abschussgeschwindigkeit
 	Vy=V.*cos(alpha).*sin(beta);											%Berechnung Y-Anteil der Abschussgeschwindigkeit
     Vz=V.*sin(alpha);
+	if (Vx == 0)
+		Vx = 1e-20;
+		endif
+	if (Vy == 0)
+		Vy = 1e-20;
+		endif
+	if (Vz == 0)
+		Vz = 1e-20;
+		endif
 	x_0=0;																	%Bereits zurückgelegter Anfangsweg X-Achse
 	x_0=vars(14);
 	y_0=0;																	%Bereits zurückgelegter Anfangsweg Y-Achse
@@ -111,8 +120,8 @@ function [ dat1,dat2 ] = Wurf3D(vars)
 	m=pi()./6.*rhop.*dp.^3;												%Masse des Partikels berechnen
     
 ## Gekoppelte Bewegungsgleichung lösen	
-    odeopt=odeset('MaxStep',10,'InitialStep',1E-06);						    %Konfiguration des ode45-Solvers
-    odeopt2=odeset('MaxStep',10,'InitialStep',1E-06,'RelTol',1E-06,'AbsTol',1E-06);
+    odeopt=odeset('MaxStep',10,'InitialStep',stepset);						    %Konfiguration des ode45-Solvers
+    odeopt2=odeset('MaxStep',10,'InitialStep',stepset,'RelTol',1E-06,'AbsTol',1E-06);
     [ngt,r]=ode45(@Vts3D,[tspan],V_0,odeopt,rhop,rhog,grav,eta,dp,windx,windy,windz,k,c,m);		%Lösen der Gekoppelten DGL
     %    Vx   ;Vy   ;Vz   ;X    ;Y    ;Z
     printf("Gekoppelte DGL fertig \n");
@@ -122,11 +131,13 @@ function [ dat1,dat2 ] = Wurf3D(vars)
     ngxp=r(:,4);
     ngyp=r(:,5);
     ngzp=r(:,6);
-    [nusvt,nusvi]=ode45(@Vtsv,[0,duration],[1E-08,0],odeopt2,rhop,rhog,grav,eta,dp,k,c,m);
+    [nusvt,nusvi]=ode23(@Vtsv,[0,duration],[-1E-20,0],odeopt2,rhop,rhog,grav,eta,dp,k,c,m);
     nusv=nusvi(end,1);
+	
+	re = c*sqrt(ngxs.^2+ngys.^2+ngzs.^2);
     
-    dat1=[ngt,ngxs,ngys,ngzs,ngxp,ngyp,ngzp];
-    dat2=[duration,trelax,VTSN,VTSS,nusv];
+    dat1=[ngt,ngxs,ngys,ngzs,ngxp,ngyp,ngzp,re];
+    dat2=[duration,trelax,VTSN,VTSS,nusv,stepset];
     
    % h=figure();															%Ein neues Zeichenfenster wird geöffnet
    % plot3 (ngxp,ngyp,ngzp);

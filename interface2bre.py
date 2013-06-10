@@ -11,7 +11,7 @@ import matplotlib
 import ttk
 matplotlib.use('TkAgg')
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
-from matplotlib.figure import Figure
+from matplotlib import pyplot as plt
 import Tkinter as tki
 from pfCalculates import *
 from manips import *
@@ -82,12 +82,12 @@ class Controlset(Manips):
             # Return from octave: ng=numerical coupled, nu= numerical, s = stokes, n =newton
             # h = horizontal, v = vertical, s = speed, p = path:
             # e.g. nuhp= numerical horizontal path
-            #[x,nghs,nghp,ngvs,ngvp,nuhs,nuhp,nuvs,nuvp,shs,shp,svs,svp,nwhs,nwhp,nwvs,nwvp];
-            #[0  1    2    3    4    5    6    7    8   9   10  11  12  13   14   15   16]
+            #[x,nghs,nghp,ngvs,ngvp,nuhs,nuhp,nuvs,nuvp,shs,shp,svs,svp,nwhs,nwhp,nwvs,nwvp,re];
+            #[0  1    2    3    4    5    6    7    8   9   10  11  12  13   14   15   16   17]
             # numerical = +4
             # stokes = +8
             # newton = +12
-            # dat2=[duration,trelax,VTSN,VTSS,nusv];
+            # dat2=[duration,trelax,VTSN,VTSS,nusv,re];
             # Setting up the options in a dictionary
             # First string: Option as shown in GUI
 
@@ -99,20 +99,23 @@ class Controlset(Manips):
             self.view.set('Corner')
             # Create selectionlist for Dropdown Menu
             self.linesslc = ('Speed-Time-Horizontal', 'Speed-Time-Vertical',
-                             'Path-Time-Horizontal', 'Path-Time-Vertical', 'Trajectory')
-            self.viewslc = ('Topview', 'View from X', 'View from Y', 'Corner')
+                             'Path-Time-Horizontal', 'Path-Time-Vertical', 'Trajectory',
+                             'Reynolds')
+            self.viewslc = ('Topview', 'View from X', 'View from Y', 'Corner', 'Reynolds')
             # Dict for the corresponding options
             self.viewopt = {'Topview': (90, 0),
                             'View from X': (0, 0),
                             'View from Y': (1, 0),
-                            'Corner': (35, 215)}
+                            'Corner': (35, 215),
+                            'Reynolds': (2, 7)}
             # Tuple with indeces of relevant columns for the plot, axis labels
             # Needs to be adapted to octave output! - Dependency!
             self.drawopt = {'Speed-Time-Horizontal': (0, 1, 'Time in [s]', 'Speed in [m/s]'),
                             'Path-Time-Horizontal': (0, 2, 'Time in [s]', 'Distance in [m]'),
                             'Speed-Time-Vertical': (0, 3, 'Time in [s]', 'Speed in [m/s]'),
                             'Path-Time-Vertical': (0, 4, 'Time in [s]', 'Distance in [m]'),
-                            'Trajectory': (2, 4, 'Horizontal distance in [m]', 'Vertical distance in [m]')}
+                            'Trajectory': (2, 4, 'Horizontal distance in [m]', 'Vertical distance in [m]'),
+                            'Reynolds': (0, 17, 'Time in [s]', 'Reynoldsnumber')}
             # Creating the actual dropdown-menu and naming the corresponding labels
             # View version for 3D mode
             self.drawselectmview = ttk.Combobox(self.drawselect, values=self.viewslc, textvariable=self.view)
@@ -387,7 +390,7 @@ class Controlset(Manips):
 
             ### Canvas for drawings
             # Creating a figure of desired size
-            self.f = Figure(figsize=(6.5, 6.5), dpi=100, facecolor='white')
+            self.f = plt.figure(figsize=(6.5, 6.5), dpi=100, facecolor='white')
             # Creating a canvas that lives inside the figure
             self.Paper = FigureCanvasTkAgg(self.f, master=self.main)
             # Making the canvas's drawings visible (updating)
@@ -438,6 +441,14 @@ class Controlset(Manips):
             self.chdrawgrid.set(1)
             self.checkgrid = ttk.Checkbutton(self.axisscaleframe, text="Show gridlines",
                                              command=self.DrawGrid, variable=self.chdrawgrid)
+            # Another Checkbutton for logarithmic scale of x
+            self.chlogxvar = tki.IntVar()
+            self.checklogx = ttk.Checkbutton(self.axisscaleframe, text="log(x)",
+                                             command=self.log, variable=self.chlogxvar)
+            # Another Checkbutton for logarithmic scale of y
+            self.chlogyvar = tki.IntVar()
+            self.checklogy = ttk.Checkbutton(self.axisscaleframe, text="log(y)",
+                                             command=self.log, variable=self.chlogyvar)
             # 3D Mode Button
             self.set3DButton = tki.Button(self.axisscaleframe, text="3D mode is off",
                                           command=self.set3dstate, bg='green', relief='raised')
@@ -452,6 +463,8 @@ class Controlset(Manips):
             self.yaxisscalet.grid(row=2, column=2, sticky='W')
             self.zaxisscalef.grid(row=3, column=1, sticky='W')
             self.zaxisscalet.grid(row=3, column=2, sticky='W')
+            self.checklogx.grid(row=1, column=3, sticky='W')
+            self.checklogy.grid(row=2, column=3, sticky='W')
             self.scaleset.grid(row=3, column=3, sticky='E')
             self.checknewton.grid(row=1, column=4, sticky='W')
             self.checkstokes.grid(row=2, column=4, sticky='W')

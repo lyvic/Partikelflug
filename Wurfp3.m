@@ -61,6 +61,12 @@ function [ dat1,dat2 ] = Wurfp3(vars)
 	alpha=angle.*(pi()./180);												%Umrechnung Winkel in Bogenmaß
 	Vx=V.*cos(alpha);														%Berechnung X-Anteil der Abschussgeschwindigkeit
 	Vy=V.*sin(alpha);														%Berechnung Y-Anteil der Abschussgeschwindigkeit
+	if (Vx == 0)
+		Vx = 1e-20;
+		endif
+	if (Vy == 0)
+		Vy = 1e-20;
+		endif
 	x_0=0;																	%Bereits zurückgelegter Anfangsweg X-Achse
 	x_0=vars(12);
 	y_0=0;																	%Bereits zurückgelegter Anfangsweg Y-Achse
@@ -104,23 +110,23 @@ function [ dat1,dat2 ] = Wurfp3(vars)
 	m=pi()./6.*rhop.*dp.^3;											%Masse des Partikels berechnen
     
 ## Gekoppelte Bewegungsgleichung lösen	
-    odeopt=odeset('MaxStep',10,'InitialStep',1E-06,'RelTol',1E-06,'AbsTol',1E-06);
+    odeopt=odeset('MaxStep',10,'InitialStep',1E-06);
     odeopt2=odeset('MaxStep',10,'InitialStep',1E-06,'RelTol',1E-06,'AbsTol',1E-06);
-    [ngt,r]=ode23(@Vts,[tspan],V_0,odeopt,rhop,rhog,grav,eta,dp,windx,windy,k,c,m);
+    [ngt,r]=ode45(@Vts,[tspan],V_0,odeopt,rhop,rhog,grav,eta,dp,windx,windy,k,c,m)
     printf("Gekoppelte DGL fertig \n");
     nghs=r(:,1);
     nghp=r(:,3);
     ngvs=r(:,2);
     ngvp=r(:,4);
-    [nusvt,nusvi]=ode23(@Vtsv,[0,duration],[1E-08,0],odeopt2,rhop,rhog,grav,eta,dp,k,c,m);
+    [nusvt,nusvi]=ode78(@Vtsv,[0,duration],[1E-20,0],odeopt2,rhop,rhog,grav,eta,dp,k,c,m);
     nusv=nusvi(end,1);
-    [nuvt,nuvi]=ode23(@Vtsv,[tspan],Vv,odeopt,rhop,rhog,grav,eta,dp,k,c,m);
-    nuvs=nuvi(:,1);
-    nuvp=nuvi(:,2);
+    %[nuvt,nuvi]=ode45(@Vtsv,[tspan],Vv,odeopt,rhop,rhog,grav,eta,dp,k,c,m);
+    nuvs=[tspan]'  %nuvi(:,1);
+    nuvp=[tspan]'  %nuvi(:,2);
     printf("Vertikal ungekoppelt fertig \n");
-    [nuht,nuhi]=ode23(@Vtsh,[tspan],Vh,odeopt,rhop,rhog,eta,dp,k,c,m);
-    nuhs=nuhi(:,1);
-    nuhp=nuhi(:,2);
+    %[nuht,nuhi]=ode45(@Vtsh,[tspan],Vh,odeopt,rhop,rhog,eta,dp,k,c,m);
+    nuhs=[tspan]'  %nuhi(:,1);
+    nuhp=[tspan]'  %nuhi(:,2);
     printf("Horizontal ungekoppelt fertig \n");
     %Berechnung der klassischen Ergebnisse
     svs=stokesvs(rhop,grav,eta,dp,Vy,x);
@@ -136,19 +142,20 @@ function [ dat1,dat2 ] = Wurfp3(vars)
     endfor
     shs=stokeshs(rhop,eta,dp,Vx,x);
     nwhs=[];
-    for i = (0:stepset:duration)
-        nwhs(end+1,1)=newtonhs(rhop,rhog,eta,dp,Vx,i);
-    endfor
+    %for i = (0:stepset:duration)
+    %    nwhs(end+1,1)=newtonhs(rhop,rhog,eta,dp,Vx,i);
+    %endfor
+	nwhs=newtonhs(rhop,rhog,eta,dp,Vx,x);
     shp=stokeshp(rhop,eta,dp,Vx,x);
     nwhp=[];
-    for i =(0:stepset:duration)
-        nwhp(end+1,1)=newtonhp(rhop,rhog,eta,dp,Vx,i);
-    endfor
-    size(nwvp)
-    size(ngt)
-    size(x)
+    %for i =(0:stepset:duration)
+    %    nwhp(end+1,1)=newtonhp(rhop,rhog,eta,dp,Vx,i);
+    %endfor
+	nwhp=newtonhp(rhop,rhog,eta,dp,Vx,x);
+	
+	re = c*sqrt(nghs.^2+ngvs.^2)
     
-    dat1=[x,nghs,nghp,ngvs,ngvp,nuhs,nuhp,nuvs,nuvp,shs,shp,svs,svp,nwhs,nwhp,nwvs,nwvp];
+    dat1=[x,nghs,nghp,ngvs,ngvp,nuhs,nuhp,nuvs,nuvp,shs,shp,svs,svp,nwhs,nwhp,nwvs,nwvp,re];
     dat2=[duration,trelax,VTSN,VTSS,nusv];
 endfunction
 
@@ -292,26 +299,26 @@ endfunction
 			%dy(1) = -((24./(c.*sqrt((y(1).^2)+(y(2).^2)))).*(1+0.15.*(c.*sqrt((y(1).^2)+(y(2).^2))).^0.687)).*k./m.*(sqrt((y(1).^2)+(y(2).^2)).*y(1));
 			%dy(2) = -((24./(c.*sqrt((y(1).^2)+(y(2).^2)))).*(1+0.15.*(c.*sqrt((y(1).^2)+(y(2).^2))).^0.687)).*k./m.*(sqrt((y(1).^2)+(y(2).^2)).*y(2)) -grav +(rhog./rhop.*grav) ;		
 			## Morrison Variante
-			dy = [(-sign((y(1,:)+windx)).*((24./(c.*sqrt(((y(1,:)+windx).^2)+ \
-			((y(2,:)+windy).^2))))+(2.6.*((c.*sqrt(((y(1,:)+windx).^2)+ \
-			((y(2,:)+windy).^2)))./5))./(1+((c.*sqrt(((y(1,:)+windx).^2)+ \
-			((y(2,:)+windy).^2)))./5).^1.52)+(0.411.*((c.*sqrt(((y(1,:)+windx).^2)+ \
-			((y(2,:)+windy).^2)))./263000).^-7.94)./(1+((c.*sqrt(((y(1,:)+windx).^2)+ \
-			((y(2,:)+windy).^2)))./263000).^-8)+((c.*sqrt(((y(1,:)+windx).^2)+ \
-			((y(2,:)+windy).^2))).^0.8./461000)).*k.*sqrt(((y(1,:)+windx).^2)+ \
-			((y(2,:)+windy).^2)).*abs(y(1,:)+windx)./m); \
+			dy = [(-sign((y(1)+windx)).*((24./(c.*sqrt(((y(1)+windx).^2)+ \
+			((y(2)+windy).^2))))+(2.6.*((c.*sqrt(((y(1)+windx).^2)+ \
+			((y(2)+windy).^2)))./5))./(1+((c.*sqrt(((y(1)+windx).^2)+ \
+			((y(2)+windy).^2)))./5).^1.52)+(0.411.*((c.*sqrt(((y(1)+windx).^2)+ \
+			((y(2)+windy).^2)))./263000).^-7.94)./(1+((c.*sqrt(((y(1)+windx).^2)+ \
+			((y(2)+windy).^2)))./263000).^-8)+((c.*sqrt(((y(1)+windx).^2)+ \
+			((y(2)+windy).^2))).^0.8./461000)).*k.*sqrt(((y(1)+windx).^2)+ \
+			((y(2)+windy).^2)).*abs(y(1)+windx)./m); \
 			
-			(-sign((y(2,:)+windy)).*((24./(c.*sqrt(((y(1,:)+windx).^2)+ \
-			((y(2,:)+windy).^2))))+(2.6.*((c.*sqrt(((y(1,:)+windx).^2)+ \
-			((y(2,:)+windy).^2)))./5))./(1+((c.*sqrt(((y(1,:)+windx).^2)+ \
-			((y(2,:)+windy).^2)))./5).^1.52)+(0.411.*((c.*sqrt(((y(1,:)+windx).^2)+ \
-			((y(2,:)+windy).^2)))./263000).^-7.94)./(1+((c.*sqrt(((y(1,:)+windx).^2)+ \
-			((y(2,:)+windy).^2)))./263000).^-8)+((c.*sqrt(((y(1,:)+windx).^2)+ \
-			((y(2,:)+windy).^2))).^0.8./461000)).*k.*sqrt(((y(1,:)+windx).^2)+ \
-			((y(2,:)+windy).^2)).*abs(y(2,:)+windy)./m -grav +(rhog./rhop.*grav));\
+			(-sign((y(2)+windy)).*((24./(c.*sqrt(((y(1)+windx).^2)+ \
+			((y(2)+windy).^2))))+(2.6.*((c.*sqrt(((y(1)+windx).^2)+ \
+			((y(2)+windy).^2)))./5))./(1+((c.*sqrt(((y(1)+windx).^2)+ \
+			((y(2)+windy).^2)))./5).^1.52)+(0.411.*((c.*sqrt(((y(1)+windx).^2)+ \
+			((y(2)+windy).^2)))./263000).^-7.94)./(1+((c.*sqrt(((y(1)+windx).^2)+ \
+			((y(2)+windy).^2)))./263000).^-8)+((c.*sqrt(((y(1)+windx).^2)+ \
+			((y(2)+windy).^2))).^0.8./461000)).*k.*sqrt(((y(1)+windx).^2)+ \
+			((y(2)+windy).^2)).*abs(y(2)+windy)./m -grav +(rhog./rhop.*grav));\
 			
-			(y(1,:));\
+			(y(1));\
 			
-			(y(2,:))];
+			(y(2))];
 		endfunction		
 		

@@ -10,6 +10,8 @@ import numpy as nm
 import random
 from oct2py import octave as oc
 from mpl_toolkits.mplot3d import axes3d  # This moduls is needed!
+import matplotlib.gridspec as gridspec
+from matplotlib import pyplot as plt
 import Tkinter as tki
 import multiprocessing
 from pfCalculates import *
@@ -33,7 +35,7 @@ def multipcalc(data, mode='2d'):
     pool.close()
     pool.join()
     end = time.time()
-    print (end-begin)
+    print (end - begin)
     return results
 
 
@@ -223,7 +225,7 @@ class Manips(object):
             self.posx = self.ingen(self.multpartslcposx.get(), self.posxraw)
             self.poszraw = tuple(map(float, self.poszentm.get().split('-')))
             self.posz = self.ingen(self.multpartslcposz.get(), self.poszraw)
-            # The following values should rather be fixed and not randomized. 
+            # The following values should rather be fixed and not randomized.
             self.prec = float(self.precent.get())
             self.duration = float(self.durationent.get())
             self.windx = float(self.windxent.get())
@@ -277,8 +279,6 @@ class Manips(object):
         # If our parameters could be set up properly, we can proceed to calling octave
         self.msgboard(self.entries)
         print 'RunThis2m called'
-        # Call Calculate, invokes a new thread in order to keep the
-        # GUI alive while calculating
         if self.set3dstatevar == 0:  # In 2D Mode
             n = int(self.partnumentm.get())
             self.dataset = []
@@ -321,7 +321,7 @@ class Manips(object):
                 self.a.plot(self.multires[i][0][:, 2], self.multires[i][0][:, 4])
 
         if self.set3dstatevar == 1:  # In 3D Mode
-            self.multires = multipcalc(self.dataset, mode='3d') # Calling octave
+            self.multires = multipcalc(self.dataset, mode='3d')  # Calling octave
             # Plotting the Data
             self.myplot(1, self.multires[0][0][:, 4],
                         self.multires[0][0][:, 5],
@@ -373,15 +373,17 @@ class Manips(object):
     # Return from octave: ng=numerical coupled, nu= numerical, s = stokes, n =newton
     # h = horizontal, v = vertical, s = speed, p = path:
     # e.g. nuhp= numerical horizontal path
-    #[x,nghs,nghp,ngvs,ngvp,nuhs,nuhp,nuvs,nuvp,shs,shp,svs,svp,nwhs,nwhp,nwvs,nwvp];
-    #[0  1    2    3    4    5    6    7    8   9   10  11  12  13   14   15   16]
+    #[x,nghs,nghp,ngvs,ngvp,nuhs,nuhp,nuvs,nuvp,shs,shp,svs,svp,nwhs,nwhp,nwvs,nwvp,re];
+    #[0  1    2    3    4    5    6    7    8   9   10  11  12  13   14   15   16   17]
     # numerical = +4
     # stokes = +8
     # newton = +12
     # dat2=[duration,trelax,VTSN,VTSS,nusv];
     # 3D Data
-    # dat1=[ngt,ngxs,ngys,ngzs,ngxp,ngyp,ngzp];
-    # dat2=[duration,trelax,VTSN,VTSS,nusv];
+    # [ngt,ngxs,ngys,ngzs,ngxp,ngyp,ngzp,re];
+    #  0   1    2    3    4    5    6    7
+    # [duration,trelax,VTSN,VTSS,nusv];
+    #  0        1      2    3    4
     # Setting up the options in a dictionary
     # First string: Option as shown in GUI
 
@@ -412,6 +414,26 @@ class Manips(object):
                                 'XDistance in [m]', 'YDistance in [m]',
                                 zttl='ZHeight in [m]', zdat=Calculate3D.y[:, 6],
                                 pttl='Trajectory')
+                if self.viewopt[self.viewin][0] == 2:  # means Reynolds
+                    rest1 = Calculate3D.y[:, 7]
+                    rest2 = []
+                    rest3 = []
+                    for i in range(len(Calculate3D.y[:, 7])):
+                        if Calculate3D.y[i, 7] > 2000:  # Newton, rather
+                            rest2.append(Calculate3D.y[i, 7])
+                        else:
+                            rest2.append(nm.NaN)
+                        if Calculate3D.y[i, 7] > 0.1 and Calculate3D.y[i, 7] <= 2000:  # Transistion
+                            rest3.append(Calculate3D.y[i, 7])
+                        else:
+                            rest3.append(nm.NaN)
+                    # In blue, Stokes behaviour
+                    # In red, transition behaviour
+                    # In green, newton behaviour
+                    self.myplot(0, Calculate3D.y[:, 0], Calculate3D.y[:, 7],
+                                'Time in [s]', 'Reynolds', pttl='Reynolds')
+                    self.a.plot(Calculate3D.y[:, 0], rest2, color='g')
+                    self.a.plot(Calculate3D.y[:, 0], rest3, color='red')
             if self.currentdata == 4:  # If multiple particle 3D Mode
                 if self.viewopt[self.viewin][0] == 0:  # means X View
                     self.myplot(0, self.multires[0][0][:, 4], self.multires[0][0][:, 6],
@@ -442,7 +464,21 @@ class Manips(object):
                     for i in range(1, int(self.partnumentm.get())):
                         self.a.plot(self.multires[i][0][:, 4], self.multires[i][0][:, 5],
                                     self.multires[i][0][:, 6])
-
+                if self.viewopt[self.viewin][0] == 2:  # means Reynolds
+                    remax = self.multires[0][0][:, 7] * 1
+                    remin = self.multires[0][0][:, 7] * 1
+                    for i in range(len(self.multires[:])):
+                        for x in range(len(self.multires[i][0][:, 7])):
+                            if remax[x] < self.multires[i][0][x, 7]:
+                                remax[x] = self.multires[i][0][x, 7] * 1
+                            elif remin[x] > self.multires[i][0][x, 7]:
+                                remin[x] = self.multires[i][0][x, 7] * 1
+                            else:
+                                pass
+                    self.myplot(0, self.multires[0][0][:, 0], remax,
+                                'Time in [s]', 'Reynolds', pttl='Reynolds')
+                    self.a.plot(self.multires[0][0][:, 0], remin, color='b')
+                    self.a.fill_between(self.multires[0][0][:, 0], remin, remax, where=None, color='b', alpha=0.3)
         else:  # We are in 2D Mode
             try:
                 self.linesin = self.lines.get()
@@ -452,21 +488,58 @@ class Manips(object):
                 self.titlexax = self.drawopt[self.linesin][2]
                 self.titleyax = self.drawopt[self.linesin][3]
                 self.figtitle = self.linesin
-                if self.currentdata == 1:  # Single particle in 2D
-                    self.myplot(0, Calculate.y[:, self.plotx],
-                                Calculate.y[:, self.ploty],
-                                self.titlexax, self.titleyax,
-                                pttl=self.figtitle)
-                if self.currentdata == 3:  # Multiple particles in 2D
-                    self.myplot(0, self.multires[0][0][:, self.plotx],
-                                self.multires[0][0][:, self.ploty], 
-                                self.titlexax, self.titleyax,
-                                pttl=self.figtitle)
-                    for i in range(1, int(self.partnumentm.get())):
-                        self.a.plot(self.multires[i][0][:, self.plotx],
-                                    self.multires[i][0][:, self.ploty])
-
-                self.Paper.show()
+                print self.ploty
+                if self.ploty != 17:  # If we are not plotting Reynolds
+                    if self.currentdata == 1:  # Single particle in 2D
+                        self.myplot(0, Calculate.y[:, self.plotx],
+                                    Calculate.y[:, self.ploty],
+                                    self.titlexax, self.titleyax,
+                                    pttl=self.figtitle)
+                    if self.currentdata == 3:  # Multiple particles in 2D
+                        self.myplot(0, self.multires[0][0][:, self.plotx],
+                                    self.multires[0][0][:, self.ploty],
+                                    self.titlexax, self.titleyax,
+                                    pttl=self.figtitle)
+                        for i in range(1, int(self.partnumentm.get())):
+                            self.a.plot(self.multires[i][0][:, self.plotx],
+                                        self.multires[i][0][:, self.ploty])
+                else:  # We are plotting Reynolds
+                    if self.currentdata == 1:  # Single Particle in 2D
+                        rest1 = Calculate.y[:, self.ploty]
+                        rest2 = []
+                        rest3 = []
+                        for i in range(len(Calculate.y[:, self.ploty])):
+                            if Calculate.y[i, self.ploty] > 2000:  # Newton, rather
+                                rest2.append(Calculate.y[i, self.ploty])
+                            else:
+                                rest2.append(nm.NaN)
+                            if Calculate.y[i, self.ploty] > 0.1 and Calculate.y[i, self.ploty] <= 2000:  # Transistion
+                                rest3.append(Calculate.y[i, self.ploty])
+                            else:
+                                rest3.append(nm.NaN)
+                        # In blue, Stokes behaviour
+                        # In red, transition behaviour
+                        # In green, newton behaviour
+                        self.myplot(0, Calculate.y[:, self.plotx], Calculate.y[:, self.ploty],
+                                    'Time in [s]', 'Reynolds', pttl='Reynolds')
+                        self.a.plot(Calculate.y[:, self.plotx], rest2, color='g')
+                        self.a.plot(Calculate.y[:, self.plotx], rest3, color='red')
+                    if self.currentdata == 3:  # Multiple particles in 2D
+                        remax = self.multires[0][0][:, self.ploty] * 1
+                        remin = self.multires[0][0][:, self.ploty] * 1
+                        for i in range(len(self.multires[:])):
+                            for x in range(len(self.multires[i][0][:, self.ploty])):
+                                if remax[x] < self.multires[i][0][x, self.ploty]:
+                                    remax[x] = self.multires[i][0][x, self.ploty] * 1
+                                elif remin[x] > self.multires[i][0][x, self.ploty]:
+                                    remin[x] = self.multires[i][0][x, self.ploty] * 1
+                                else:
+                                    print "None was true"
+                        self.myplot(0, self.multires[0][0][:, self.plotx], remax,
+                                    'Time in [s]', 'Reynolds', pttl='Reynolds')
+                        self.a.plot(self.multires[0][0][:, self.plotx], remin, color='b')
+                        self.a.fill_between(self.multires[0][0][:, self.plotx], remin, remax, where=None, color='b', alpha=0.3)
+                # self.Paper.show()
                 # Draw Stokes and Newton if checked
                 if self.chnwvar.get() == 1:
                     self.shownewton2()
@@ -477,6 +550,7 @@ class Manips(object):
                 print "No values for redraw2"
                 pass
         # Make changes visible
+        self.log()
         self.Paper.show()
 
     def shownewton(self, event):
@@ -563,8 +637,15 @@ class Manips(object):
             self.x2 = float(self.xaxisscalet.get())
             self.y1 = float(self.yaxisscalef.get())
             self.y2 = float(self.yaxisscalet.get())
-            self.z1 = float(self.zaxisscalef.get())
-            self.z2 = float(self.zaxisscalet.get())
+            if self.set3dstatevar == 1:
+                try:
+                    self.z1 = float(self.zaxisscalef.get())
+                    self.z2 = float(self.zaxisscalet.get())
+                except ValueError or AttributeError:
+                    print "Entry in Z not valid"
+                    return
+            else:
+                print "Z not read"
         # In 3D Mode Corner View:
             if self.set3dstatevar == 1 and self.viewopt[self.viewset][0] == 35:
                 if self.currentdata == 2:  # Single Particle 3D mode
@@ -693,6 +774,8 @@ class Manips(object):
                                     pttl='X-Y Trajecotry Projection')
                         self.a.set_xlim(self.x1, self.x2)
                         self.a.set_ylim(self.y1, self.y2)
+                    if self.viewopt[self.viewin][0] == 2:  # means Reynolds
+                        print "you want Reynolds?"
                 if self.currentdata == 4:  # If multiple particle 3D Mode
                     print "We are having a few particles in 3D"
                     xclipm = []
@@ -746,6 +829,8 @@ class Manips(object):
                             self.a.plot(xclipm[i], yclipm[i])
                         self.a.set_xlim(self.x1, self.x2)
                         self.a.set_ylim(self.y1, self.y2)
+                    if self.viewopt[self.viewin][0] == 2:  # means Reynolds
+                        print "People ask for Reynolds!"
             else:  # Not 3D Mode and no corner view
                 print "something else"
                 self.a.set_xlim(self.x1, self.x2)
@@ -763,7 +848,7 @@ class Manips(object):
         if text in 'e0123456789.-+':
             return True
         else:
-            try:  # The insert method of the entry boxes need this version
+            try:  # The insert method of the entry boxes needs this version
                 float(text)
                 return True
             except ValueError:
@@ -771,7 +856,7 @@ class Manips(object):
                 return False
 
     def myplot(self, persp3D, xdat, ydat, xttl, yttl,
-               zdat=nm.NaN, zttl=nm.NaN, pttl=''):
+               zdat=nm.NaN, zttl=nm.NaN, pttl='', datt=[1, 2, 3], re=[1, 2, 3]):
         """Plotting can be quite complicated, so I shortened my code by
         creating these routines for the most common cases"""
         self.f.clf()
@@ -780,19 +865,40 @@ class Manips(object):
             self.f.subplots_adjust(bottom=0.05, left=0.05,
                                    right=0.95, top=0.95)
             self.a.plot(xdat, ydat, zdat)
-            self.a.set_zlabel(zttl)
+            self.a.set_xlabel(xttl, fontsize=10)
+            self.a.set_ylabel(yttl, fontsize=10)
+            self.a.set_title(pttl, fontsize=10)
+            self.a.tick_params(axis='both', labelsize=10)
+            self.DrawGrid()
+            self.a.ticklabel_format(style='sci', scilimits=(0, 0), axis='both')
+            self.a.set_zlabel(zttl, fontsize=10)
             self.a.mouse_init()
         else:
             self.a = self.f.add_subplot(111)
             self.f.subplots_adjust(bottom=0.11, left=0.11,
                                    right=0.92, top=0.92)
             self.a.plot(xdat, ydat)
-        self.a.set_xlabel(xttl)
-        self.a.set_ylabel(yttl)
-        self.a.set_title(pttl)
-        self.DrawGrid()
-        self.a.ticklabel_format(style='sci', scilimits=(0, 0), axis='both')
+            self.a.set_xlabel(xttl, fontsize=10)
+            self.a.set_ylabel(yttl, fontsize=10)
+            self.a.set_title(pttl, fontsize=10)
+            self.a.tick_params(axis='both', labelsize=10)
+            self.DrawGrid()
+            self.a.ticklabel_format(style='sci', scilimits=(0, 0), axis='both')
         return
+
+    # def logy(self, event):
+    #     self.logy2()
+
+    def log(self):
+        if self.chlogxvar.get() == 1:  #If the checkmark is set
+            self.a.set_xscale('log')
+        else:
+            self.a.set_xscale('linear')
+        if self.chlogyvar.get() == 1:  # If the checkmark is set
+            self.a.set_yscale('log')
+        else:
+            self.a.set_yscale('linear')
+        self.Paper.show()
 
     # This function is not used yet, might become usefull later
     def myplot_add(self, persp3D, xdat, ydat, zdat=nm.NaN):
