@@ -15,6 +15,7 @@ from matplotlib import pyplot as plt
 import Tkinter as tki
 from pfCalculates import *
 from manips import *
+import numpy as nm
 
 
 class Controlset(Manips):
@@ -23,6 +24,7 @@ class Controlset(Manips):
     in the Calculation-Class"""
     def __init__(self):
         self.buildGUI()
+        return
 
     def buildGUI(self):
         if __name__ == '__main__':
@@ -65,10 +67,17 @@ class Controlset(Manips):
             # disable writing to prevent users from writing into the textbox.
             self.info.config(state=tki.DISABLED)
 
+            ### Menus under the canvas, axes, particleselector and objects
+            self.displaymenu = ttk.Notebook(self.main)
+            self.displaymenu.grid(row=4, column=0, sticky='NSWE')
+
             ### Menu containing field for DropDown.
-            self.drawselect = tki.Frame(self.main)  # , bg='red')
+            self.drawselect = tki.Frame()  # , bg='red')
+            self.particleselector = tki.Frame()
             self.drawselect.grid_columnconfigure(0, weight=1)
-            self.drawselect.grid(row=4, column=0, sticky='NSWE')
+            self.particleselector.grid_columnconfigure(0, weight=1)
+            self.displaymenu.add(self.drawselect, text='Axes')
+            self.displaymenu.add(self.particleselector, text='Particle picker')
 
             ### DropDownMenu for drawing selection.
             # Button for the redraw-option.
@@ -103,11 +112,11 @@ class Controlset(Manips):
                              'Reynolds')
             self.viewslc = ('Topview', 'View from X', 'View from Y', 'Corner', 'Reynolds')
             # Dict for the corresponding options
-            self.viewopt = {'Topview': (90, 0),
-                            'View from X': (0, 0),
-                            'View from Y': (1, 0),
-                            'Corner': (35, 215),
-                            'Reynolds': (2, 7)}
+            self.viewopt = {'Topview': (0, 0, 4, 5, 0, 'X-Distance in [m]', 'Y-Distance in [m]', '', 'X-Y Trajecotry Projection'),
+                            'View from X': (1, 0, 4, 6, 0, 'X-Distance in [m]', 'Z-Distance in [m]', '', 'X-Z Trajecotry Projection'),
+                            'View from Y': (2, 0, 5, 6, 0, 'Y-Distance in [m]', 'Z-Distance in [m]', '', 'Y-Z Trajecotry Projection'),
+                            'Corner': (3, 1, 4, 5, 6, 'X-Distance in [m]', 'Y-Distance in [m]', 'Z-Distance in [m]', 'Trajectory'),
+                            'Reynolds': (4, 0, 0, 7, 0, 'Time in [s]', 'Reynoldsnumber', '', 'Renolds')}
             # Tuple with indeces of relevant columns for the plot, axis labels
             # Needs to be adapted to octave output! - Dependency!
             self.drawopt = {'Speed-Time-Horizontal': (0, 1, 'Time in [s]', 'Speed in [m/s]'),
@@ -206,7 +215,7 @@ class Controlset(Manips):
             ## Elements
             # Number of particles
             self.partnumentm = ttk.Entry(self.paramultpart, width=10)
-            self.partnumentm.insert(0, 20)
+            self.partnumentm.insert(0, 10)
             # Density
             self.rhopentm = ttk.Entry(self.paramultpart, width=10)
             self.rhopentm.insert(0, '2900-2900')
@@ -390,7 +399,7 @@ class Controlset(Manips):
 
             ### Canvas for drawings
             # Creating a figure of desired size
-            self.f = plt.figure(figsize=(6.5, 6.5), dpi=100, facecolor='white')
+            self.f = plt.figure(figsize=(5.5, 5.5), dpi=100, facecolor='white')
             # Creating a canvas that lives inside the figure
             self.Paper = FigureCanvasTkAgg(self.f, master=self.main)
             # Making the canvas's drawings visible (updating)
@@ -408,8 +417,8 @@ class Controlset(Manips):
 
             ### Axis configuration toolbar
             # A frame containing the axis config-menu
-            self.axisscaleframe = tki.Frame(self.main)  # , bg='magenta')
-            self.axisscaleframe.grid(row=5, column=0, sticky='SNEW')
+            self.axisscaleframe = tki.Frame(self.drawselect)  # , bg='magenta')
+            self.axisscaleframe.grid(row=1, column=0, columnspan=3, sticky='SNEW')
             # In that Frame, some Entry-boxes to specify the scale
             self.xaxisscalef = ttk.Entry(self.axisscaleframe, width=10, validate='key', validatecommand=vcmd)
             self.xaxisscalet = ttk.Entry(self.axisscaleframe, width=10, validate='key', validatecommand=vcmd)
@@ -470,9 +479,37 @@ class Controlset(Manips):
             self.checkstokes.grid(row=2, column=4, sticky='W')
             self.checkgrid.grid(row=0, column=4, sticky='W')
             self.set3DButton.grid(row=3, column=4, sticky="EW")
+
+            ### The particle picker in a treeview
+            self.picker = ttk.Treeview(self.particleselector, height=6)
+            self.picker['columns'] = ('Nr', 'dp', 'rhop', 'v', 'elevation',
+                                      'azimuth', 'Initial X-Pos',
+                                      'Initial Y-Pos', 'Initial Z-Pos')
+            self.picker['displaycolumns'] =[1, 2, 3, 4, 5, 6, 7, 8]
+            self.picker.column('#0', width=40, anchor=tki.CENTER, stretch=True)
+            self.picker.column('dp', width=80, stretch=True)
+            self.picker.column('rhop', width=90, stretch=True)
+            self.picker.column('v', width=60, stretch=True)
+            self.picker.column('elevation', width=80, stretch=True)
+            self.picker.column('azimuth', width=80, stretch=True)
+            self.picker.column('Initial X-Pos', width=60, stretch=True)
+            self.picker.column('Initial Y-Pos', width=60, stretch=True)
+            self.picker.column('Initial Z-Pos', width=60, stretch=True)
+            self.picker.heading('#0', text='ID')
+            self.picker.heading('dp', text='dp in µm', anchor=tki.W)
+            self.picker.heading('rhop', text='rhop in kg/m³', anchor=tki.W)
+            self.picker.heading('v', text='v in m/s', anchor=tki.W)
+            self.picker.heading('elevation', text='elev. in °deg', anchor=tki.W)
+            self.picker.heading('azimuth', text='azim. in °deg', anchor=tki.W)
+            self.picker.heading('Initial X-Pos', text='X in m', anchor=tki.W)
+            self.picker.heading('Initial Y-Pos', text='Y in m', anchor=tki.W)
+            self.picker.heading('Initial Z-Pos', text='Z in m', anchor=tki.W)
+            self.picker.grid(row=0, column=0, sticky='NSWE')
+            self.picker.bind('<<TreeviewSelect>>', self.pickclick)
             self.set3dstate()
         else:
             print "aha, "+__name__+" imported that file"
+        return
 if __name__ == '__main__':
     CS1 = Controlset()
     CS1.mainw.mainloop()

@@ -143,6 +143,7 @@ class Calculate(threading.Thread):
         print self.angle
         print prec
         print duration
+        return
 
     def decimalize(self, numin):
         decout = dc.Decimal(numin).quantize(dc.Decimal('.001'),
