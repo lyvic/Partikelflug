@@ -11,6 +11,9 @@ from oct2py import octave as oc
 import Tkinter as tki
 
 
+### The following functions are outside of the manips class
+### Why? I don't really know, but otherwise the multiprocessing doesn't work.
+# Multiparticle calculations
 class Calculate3D(threading.Thread):
     def __init__(self, guest, rhop, dp, v, anglee, anglea, prec,
                  duration, windx, windy, windz, rhog, eta, grav,

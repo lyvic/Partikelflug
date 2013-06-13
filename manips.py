@@ -5,62 +5,13 @@ the data input from the interface. It does all manipulations necessary.
 The core of any feature should be found here."""
 
 # Importing modules
-import time
 import numpy as nm
 import random
 import decimal as dc
-from oct2py import octave as oc
 from mpl_toolkits.mplot3d import axes3d  # This moduls is needed!
 import Tkinter as tki
-import multiprocessing
 from pfCalculates import *
-
-
-### The following functions are outside of the manips class
-### Why? I don't really know, but otherwise the multiprocessing doesn't work.
-# Multiparticle calculations
-def multipcalc(data, mode='2d'):
-    begin = time.time()
-    # Counting the number of available CPUs in System
-    pool_size = multiprocessing.cpu_count()
-    # Creating a pool of processes with the maximal number of CPUs possible
-    pool = multiprocessing.Pool(processes=pool_size)
-    # Call the corresponding function depending on 2D or 3D mode
-    if mode == '3d':
-        results = pool.map_async(calculate_m3d, data).get()
-    else:
-        results = pool.map_async(calculate_m, data).get()
-    # Properly close and end all processes, once we're done
-    pool.close()
-    pool.join()
-    end = time.time()
-    print (end - begin)
-    return results
-
-
-# Function to be called for multiple particles in 2D mode
-# Receives all parameters needed in a list: indata
-def calculate_m(indata):
-    # This might print oddly as we haven't applied any locks
-    print 'Reading values and calling Octave'
-    # Calling octave
-    [Calculate.y, Calculate.y2] = \
-        oc.call('Wurfp3.m', [indata],
-                verbose=False)  # For debugging change to TRUE or use octave
-    print 'Done! Data from Octave available'
-    return [Calculate.y, Calculate.y2]
-
-
-# Function to be called for multiple particles in 3D mode
-# Receives all parameters needed in a list: indata
-def calculate_m3d(indata):
-    # This might print oddly as there are no locks used
-    print 'Reading values and calling Octave'
-    [Calculate.y, Calculate.y2] = \
-        oc.call('Wurf3D.m', [indata],
-                verbose=False)  # Use octave for debugging, keep on false
-    print 'Done! Data from Octave available'
-    return [Calculate.y, Calculate.y2]
+import multiprocessing
 
 
 ### Manips class. Everything here is basically encapsuled
@@ -319,7 +270,8 @@ class Manips(object):
         self.DrawGrid()
         self.a.ticklabel_format(style='sci', scilimits=(0, 0), axis='both')
         if self.set3dstatevar == 0:  # In 2D Mode
-            self.multires = multipcalc(self.dataset)  # Processing the Data in octave multicore
+            self.multi = Slave(self.dataset)
+            self.multires = self.multi.start()  # Processing the Data in octave multicore
             # Plotting the Data
             self.myplot(0, self.multires[0][0][:, 2], self.multires[0][0][:, 4], 'Time in [s]',
                         'Speed in [m/s]', pttl='Speed-Time-Horizontal')
@@ -336,28 +288,32 @@ class Manips(object):
                                    '/', self.d3(self.dataset[i][7])])
 
         if self.set3dstatevar == 1:  # In 3D Mode
-            self.multires = multipcalc(self.dataset, mode='3d')  # Calling octave
-            # Plotting the Data
-            self.myplot(1, self.multires[0][0][:, 4],
-                        self.multires[0][0][:, 5],
-                        'XDistance in [m]',
-                        'YDistance in [m]',
-                        zttl='ZHeight in [m]',
-                        zdat=self.multires[0][0][:, 6],
-                        pttl='Trajectory')
-            # Adding a line for every dataset
-            for i in range(1, int(self.partnumentm.get())):
-                self.a.plot(self.multires[i][0][:, 4], self.multires[i][0][:, 5],
-                            self.multires[i][0][:, 6])
-            kill = self.picker.get_children()
-            for item in kill:
-                self.picker.delete(item)
-            for i in range(0, int(self.partnumentm.get())):
-                self.picker.insert('', 'end', text=str(i), values=[i, self.d3(self.dataset[i][1]),
-                                   self.d3(self.dataset[i][0]), self.d3(self.dataset[i][2]),
-                                   self.d3(self.dataset[i][3]), self.d3(self.dataset[i][4]),
-                                   self.d3(self.dataset[i][13]), self.d3(self.dataset[i][14]),
-                                   self.d3(self.dataset[i][15])])
+            self.multi = Slave(self, self.dataset, mode='3d')
+            self.multires = self.multi.start()  # Calling octave
+
+    def SecondHalf(self):
+        self.multires = Manips.multires
+        # Plotting the Data
+        self.myplot(1, self.multires[0][0][:, 4],
+                    self.multires[0][0][:, 5],
+                    'XDistance in [m]',
+                    'YDistance in [m]',
+                    zttl='ZHeight in [m]',
+                    zdat=self.multires[0][0][:, 6],
+                    pttl='Trajectory')
+        # Adding a line for every dataset
+        for i in range(1, int(self.partnumentm.get())):
+            self.a.plot(self.multires[i][0][:, 4], self.multires[i][0][:, 5],
+                        self.multires[i][0][:, 6])
+        kill = self.picker.get_children()
+        for item in kill:
+            self.picker.delete(item)
+        for i in range(0, int(self.partnumentm.get())):
+            self.picker.insert('', 'end', text=str(i), values=[i, self.d3(self.dataset[i][1]),
+                               self.d3(self.dataset[i][0]), self.d3(self.dataset[i][2]),
+                               self.d3(self.dataset[i][3]), self.d3(self.dataset[i][4]),
+                               self.d3(self.dataset[i][13]), self.d3(self.dataset[i][14]),
+                               self.d3(self.dataset[i][15])])
         # Update the canvas to show the plots
         self.Paper.show()
         return
@@ -1047,3 +1003,69 @@ class Manips(object):
         #     print self.picker.set(sel[i], column='Nr')
         self.SetAxis2()
         return
+
+
+def calc_m3d(arg, **kwarg):
+    return CalculateM.calculate_m3d(*arg, **kwarg)
+
+
+def calc_m(arg, **kwarg):
+    return CalculateM.calculate_m(*arg, **kwarg)
+
+
+class Slave(threading.Thread):
+    def __init__(self, guest, data, mode):
+        self.data = data
+        self.mode = mode
+        self.guest = guest
+        threading.Thread.__init__(self)
+
+    def run(self):
+        Esel = CalculateM()
+        Luggage = Esel.run(self.guest, self.data, self.mode)
+        return Luggage
+
+
+class CalculateM(object):
+
+    def run(self, guest, data, mode='2d'):
+        begin = time.time()
+        # Counting the number of available CPUs in System
+        pool_size = multiprocessing.cpu_count()
+        # Creating a pool of processes with the maximal number of CPUs possible
+        pool = multiprocessing.Pool(processes=pool_size)
+        # Call the corresponding function depending on 2D or 3D mode
+        if mode == '3d':
+            Manips.multires = pool.map_async(calc_m3d, zip([self]*len(data), data)).get()
+        else:
+            Manips.multires = pool.map_async(calc_m, zip([self]*len(data), data)).get()
+        # Properly close and end all processes, once we're done
+        pool.close()
+        pool.join()
+        end = time.time()
+        guest.SecondHalf()
+        print (end - begin)
+        return
+
+    # Function to be called for multiple particles in 2D mode
+    # Receives all parameters needed in a list: indata
+    def calculate_m(self, indata):
+        # This might print oddly as we haven't applied any locks
+        print 'Reading values and calling Octave'
+        # Calling octave
+        [Calculate.y, Calculate.y2] = \
+            oc.call('Wurfp3.m', [indata],
+                    verbose=False)  # For debugging change to TRUE or use octave
+        print 'Done! Data from Octave available'
+        return [Calculate.y, Calculate.y2]
+
+    # Function to be called for multiple particles in 3D mode
+    # Receives all parameters needed in a list: indata
+    def calculate_m3d(self, indata):
+        # This might print oddly as there are no locks used
+        print 'Reading values and calling Octave'
+        [Calculate.y, Calculate.y2] = \
+            oc.call('Wurf3D.m', [indata],
+                    verbose=False)  # Use octave for debugging, keep on false
+        print 'Done! Data from Octave available'
+        return [Calculate.y, Calculate.y2]
