@@ -9,6 +9,7 @@ Anything that has to do with layout or appearance might be found here."""
 # importing libraries
 import matplotlib
 import ttk
+import sys
 matplotlib.use('TkAgg')
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
 from matplotlib import pyplot as plt
@@ -26,9 +27,14 @@ class Controlset(Manips):
         self.buildGUI()
         return
 
+    def myclose(self):
+        sys.exit(0)
+        return
+
     def buildGUI(self):
         if __name__ == '__main__':
             self.mainw = tki.Tk()
+            self.mainw.protocol("WM_DELETE_WINDOW", self.myclose)  # Exit properly
             self.mainw.title("Partikelflug")
             self.mainw.geometry('+10+10')
             self.set3dstatevar = 1  # 3D mode is on and will be disabled
