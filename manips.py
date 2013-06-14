@@ -270,28 +270,34 @@ class Manips(object):
         self.DrawGrid()
         self.a.ticklabel_format(style='sci', scilimits=(0, 0), axis='both')
         if self.set3dstatevar == 0:  # In 2D Mode
-            self.multi = Slave(self.dataset)
+            self.multi = Slave(self, self.dataset)
             self.multires = self.multi.start()  # Processing the Data in octave multicore
-            # Plotting the Data
-            self.myplot(0, self.multires[0][0][:, 2], self.multires[0][0][:, 4], 'Time in [s]',
-                        'Speed in [m/s]', pttl='Speed-Time-Horizontal')
-            # Adding a line for every dataset
-            for i in range(1, int(self.partnumentm.get())):
-                self.a.plot(self.multires[i][0][:, 2], self.multires[i][0][:, 4])
-            kill = self.picker.get_children()
-            for item in kill:
-                self.picker.delete(item)
-            for i in range(0, int(self.partnumentm.get())):
-                self.picker.insert('', 'end', text=str(i), values=[i, self.d3(self.dataset[i][1]),
-                                   self.d3(self.dataset[i][0]), self.d3(self.dataset[i][2]),
-                                   self.d3(self.dataset[i][3]), '/', self.d3(self.dataset[i][6]),
-                                   '/', self.d3(self.dataset[i][7])])
-
+            return
         if self.set3dstatevar == 1:  # In 3D Mode
             self.multi = Slave(self, self.dataset, mode='3d')
             self.multires = self.multi.start()  # Calling octave
+            return
 
-    def SecondHalf(self):
+    def SecondHalf2d(self):
+        # Plotting the Data
+        self.multires = Manips.multires
+        self.myplot(0, self.multires[0][0][:, 2], self.multires[0][0][:, 4], 'Time in [s]',
+                    'Speed in [m/s]', pttl='Speed-Time-Horizontal')
+        # Adding a line for every dataset
+        for i in range(1, int(self.partnumentm.get())):
+            self.a.plot(self.multires[i][0][:, 2], self.multires[i][0][:, 4])
+        kill = self.picker.get_children()
+        for item in kill:
+            self.picker.delete(item)
+        for i in range(0, int(self.partnumentm.get())):
+            self.picker.insert('', 'end', text=str(i), values=[i, self.d3(self.dataset[i][1]),
+                               self.d3(self.dataset[i][0]), self.d3(self.dataset[i][2]),
+                               self.d3(self.dataset[i][3]), '/', self.d3(self.dataset[i][6]),
+                               '/', self.d3(self.dataset[i][7])])
+        self.Paper.show()
+        return
+
+    def SecondHalf3d(self):
         self.multires = Manips.multires
         # Plotting the Data
         self.myplot(1, self.multires[0][0][:, 4],
@@ -443,7 +449,6 @@ class Manips(object):
                 self.titlexax = self.drawopt[self.linesin][2]
                 self.titleyax = self.drawopt[self.linesin][3]
                 self.figtitle = self.linesin
-                print self.ploty
                 if self.ploty != 17:  # If we are not plotting Reynolds
                     if self.currentdata == 1:  # Single particle in 2D
                         self.myplot(0, Calculate.y[:, self.plotx],
@@ -832,8 +837,73 @@ class Manips(object):
                         self.a.set_xlim(self.x1, self.x2)
                         self.a.set_ylim(self.y1, self.y2)
                         # print "People ask for Reynolds!"
-            else:  # Not 3D Mode and no corner view
-                print "something else"
+            elif self.currentdata == 3:  # Not 3D Mode and no corner view, but maybe 2D multi
+                sel = self.picker.selection()
+                selnr = []
+                if len(sel) != 0:
+                    for i in range(len(sel)):
+                        selnr.append(int(self.picker.set(sel[i], column='Nr')))
+                else:
+                    for i in range(int(self.partnumentm.get())):
+                        selnr.append(i)
+                self.linesin = self.lines.get()
+                self.msgboard('Drawing: '+self.linesin+'\n')
+                self.plotx = self.drawopt[self.linesin][0]
+                self.ploty = self.drawopt[self.linesin][1]
+                self.titlexax = self.drawopt[self.linesin][2]
+                self.titleyax = self.drawopt[self.linesin][3]
+                self.figtitle = self.linesin
+                if self.ploty != 17:  # If we are not plotting Reynolds
+                    self.myplot(0, self.multires[0][0][:, self.plotx],
+                                self.multires[0][0][:, self.ploty],
+                                self.titlexax, self.titleyax,
+                                pttl=self.figtitle)
+                    if selnr[0] != 0:
+                        firstline = self.firstplot.pop(0)
+                        firstline.remove()
+                        del firstline
+                    for i in selnr:
+                        self.a.plot(self.multires[i][0][:, self.plotx],
+                                    self.multires[i][0][:, self.ploty])
+                else:  # We are plotting Reynolds
+                    if len(selnr) == 1:  # Single line in 2D
+                        rest1 = self.multires[selnr[0]][0][:, self.ploty]
+                        rest2 = []
+                        rest3 = []
+                        for i in range(len(self.multires[selnr[0]][0][:, self.ploty])):
+                            if self.multires[selnr[0]][0][i, self.ploty] > 2000:  # Newton, rather
+                                rest2.append(self.multires[selnr[0]][0][i, self.ploty])
+                            else:
+                                rest2.append(nm.NaN)
+                            if (self.multires[selnr[0]][0][i, self.ploty] > 0.1 and
+                               self.multires[selnr[0]][0][i, self.ploty] <= 2000):  # Transistion
+                                rest3.append(self.multires[selnr[0]][0][i, self.ploty])
+                            else:
+                                rest3.append(nm.NaN)
+                        # In blue, Stokes behaviour
+                        # In red, transition behaviour
+                        # In green, newton behaviour
+                        self.myplot(0, self.multires[selnr[0]][0][:, self.plotx], rest1,
+                                    'Time in [s]', 'Reynolds', pttl='Reynolds')
+                        self.a.plot(self.multires[selnr[0]][0][:, self.plotx], rest2, color='g')
+                        self.a.plot(self.multires[selnr[0]][0][:, self.plotx], rest3, color='red')
+                    else:  # Multiple particles in 2D
+                        remax = self.multires[selnr[0]][0][:, self.ploty] * 1
+                        remin = self.multires[selnr[0]][0][:, self.ploty] * 1
+                        for i in selnr:
+                            for x in range(len(self.multires[i][0][:, self.ploty])):
+                                if remax[x] < self.multires[i][0][x, self.ploty]:
+                                    remax[x] = self.multires[i][0][x, self.ploty] * 1
+                                elif remin[x] > self.multires[i][0][x, self.ploty]:
+                                    remin[x] = self.multires[i][0][x, self.ploty] * 1
+                                else:
+                                    pass
+                        self.myplot(0, self.multires[0][0][:, self.plotx], remax,
+                                    'Time in [s]', 'Reynolds', pttl='Reynolds')
+                        self.a.plot(self.multires[0][0][:, self.plotx], remin, color='b')
+                        self.a.fill_between(self.multires[0][0][:, self.plotx],
+                                            remin, remax, where=None, color='b', alpha=0.3)
+                    print "something else"
                 self.a.set_xlim(self.x1, self.x2)
                 self.a.set_ylim(self.y1, self.y2)
             self.Paper.show()
@@ -1014,7 +1084,7 @@ def calc_m(arg, **kwarg):
 
 
 class Slave(threading.Thread):
-    def __init__(self, guest, data, mode):
+    def __init__(self, guest, data, mode='2d'):
         self.data = data
         self.mode = mode
         self.guest = guest
@@ -1043,7 +1113,10 @@ class CalculateM(object):
         pool.close()
         pool.join()
         end = time.time()
-        guest.SecondHalf()
+        if mode == '3d':
+            guest.SecondHalf3d()
+        else:
+            guest.SecondHalf2d()
         print (end - begin)
         return
 
