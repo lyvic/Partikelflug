@@ -116,13 +116,18 @@ class Controlset(Manips):
             self.linesslc = ('Speed-Time-Horizontal', 'Speed-Time-Vertical',
                              'Path-Time-Horizontal', 'Path-Time-Vertical', 'Trajectory',
                              'Reynolds')
-            self.viewslc = ('Topview', 'View from X', 'View from Y', 'Corner', 'Reynolds')
+            self.viewslc = ('Topview', 'View from X', 'View from Y', 'Corner', 'Reynolds',
+                            'Total Speed', 'Speed in X', 'Speed in Y', 'Speed in Z')
             # Dict for the corresponding options
-            self.viewopt = {'Topview': (0, 0, 4, 5, 0, 'X-Distance in [m]', 'Y-Distance in [m]', '', 'X-Y Trajecotry Projection'),
-                            'View from X': (1, 0, 4, 6, 0, 'X-Distance in [m]', 'Z-Distance in [m]', '', 'X-Z Trajecotry Projection'),
-                            'View from Y': (2, 0, 5, 6, 0, 'Y-Distance in [m]', 'Z-Distance in [m]', '', 'Y-Z Trajecotry Projection'),
+            self.viewopt = {'Topview': (0, 0, 4, 5, 0, 'X-Distance in [m]', 'Y-Distance in [m]', '', 'X-Y Trajectory Projection'),
+                            'View from X': (1, 0, 4, 6, 0, 'X-Distance in [m]', 'Z-Distance in [m]', '', 'X-Z Trajectory Projection'),
+                            'View from Y': (2, 0, 5, 6, 0, 'Y-Distance in [m]', 'Z-Distance in [m]', '', 'Y-Z Trajectory Projection'),
                             'Corner': (3, 1, 4, 5, 6, 'X-Distance in [m]', 'Y-Distance in [m]', 'Z-Distance in [m]', 'Trajectory'),
-                            'Reynolds': (4, 0, 0, 7, 0, 'Time in [s]', 'Reynoldsnumber', '', 'Renolds')}
+                            'Reynolds': (4, 0, 0, 7, 0, 'Time in [s]', 'Reynoldsnumber', '', 'Renolds'),
+                            'Total Speed': (5, 0, 0, 8, 0, 'Time in [s]', 'Speed in [m/s]', '', 'Speed-Time-Total'),
+                            'Speed in X': (6, 0, 0, 1, 0, 'Time in [s]', 'Speed in [m/s]', '', 'Speen in X'),
+                            'Speed in Y': (7, 0, 0, 2, 0, 'Time in [s]', 'Speed in [m/s]', '', 'Speen in Y'),
+                            'Speed in Z': (8, 0, 0, 3, 0, 'Time in [s]', 'Speed in [m/s]', '', 'Speen in Z')}
             # Tuple with indeces of relevant columns for the plot, axis labels
             # Needs to be adapted to octave output! - Dependency!
             self.drawopt = {'Speed-Time-Horizontal': (0, 1, 'Time in [s]', 'Speed in [m/s]'),

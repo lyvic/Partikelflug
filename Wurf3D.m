@@ -135,8 +135,9 @@ function [ dat1,dat2 ] = Wurf3D(vars)
     nusv=nusvi(end,1);
 	
 	re = c*sqrt(ngxs.^2+ngys.^2+ngzs.^2);
+	ngvs = sqrt(ngxs.^2+ngys.^2+ngzs.^2);
     
-    dat1=[ngt,ngxs,ngys,ngzs,ngxp,ngyp,ngzp,re];
+    dat1=[ngt,ngxs,ngys,ngzs,ngxp,ngyp,ngzp,re,ngvs];
     dat2=[duration,trelax,VTSN,VTSS,nusv,stepset];
     
    % h=figure();															%Ein neues Zeichenfenster wird geöffnet

@@ -267,7 +267,7 @@ class Manips(object):
             self.a = self.f.add_subplot(111)
             self.f.subplots_adjust(bottom=0.11, left=0.11,
                                    right=0.92, top=0.92)
-        self.DrawGrid()
+        # self.DrawGrid()
         self.a.ticklabel_format(style='sci', scilimits=(0, 0), axis='both')
         if self.set3dstatevar == 0:  # In 2D Mode
             self.multi = Slave(self, self.dataset)
@@ -515,7 +515,7 @@ class Manips(object):
         return
 
     def shownewton(self, event):
-        self.shownewton()
+        self.shownewton2()
         return
 
     def shownewton2(self):
@@ -592,7 +592,7 @@ class Manips(object):
                 self.a.grid(True)
             else:
                 self.a.grid(False)
-            # self.Paper.show()
+            #self.Paper.show()
         except AttributeError:
             print "No plot shown"
         return
@@ -729,19 +729,19 @@ class Manips(object):
                                     pttl='X-Z Trajecotry Projection')
                         self.a.set_xlim(self.x1, self.x2)
                         self.a.set_ylim(self.z1, self.z2)
-                    if self.viewopt[self.viewset][0] == 2:  # means Y View
+                    elif self.viewopt[self.viewset][0] == 2:  # means Y View
                         self.myplot(0, yclip, zclip,
                                     'Y Distance in [m]', 'Z Distance in [m]',
                                     pttl='Y-Z Trajecotry Projection')
                         self.a.set_xlim(self.y1, self.y2)
                         self.a.set_ylim(self.z1, self.z2)
-                    if self.viewopt[self.viewset][0] == 0:  # means Topview
+                    elif self.viewopt[self.viewset][0] == 0:  # means Topview
                         self.myplot(0, xclip, yclip,
                                     'X Distance in [m]', 'Y Distance in [m]',
                                     pttl='X-Y Trajecotry Projection')
                         self.a.set_xlim(self.x1, self.x2)
                         self.a.set_ylim(self.y1, self.y2)
-                    if self.viewopt[self.viewset][0] == 4:  # means Reynolds
+                    else:  # means Reynolds or some Speed view
                         self.a.set_xlim(self.x1, self.x2)
                         self.a.set_ylim(self.y1, self.y2)
                 if self.currentdata == 4:  # If multiple particle 3D Mode
@@ -781,7 +781,7 @@ class Manips(object):
                             self.a.plot(xclipm[i], zclipm[i])
                         self.a.set_xlim(self.x1, self.x2)
                         self.a.set_ylim(self.z1, self.z2)
-                    if self.viewopt[self.viewset][0] == 2:  # means Y View
+                    elif self.viewopt[self.viewset][0] == 2:  # means Y View
                         self.myplot(0, yclipm[0], zclipm[0],
                                     'Y Distance in [m]', 'Z Distance in [m]',
                                     pttl='Y-Z Trajecotry Projection')
@@ -789,7 +789,7 @@ class Manips(object):
                             self.a.plot(yclipm[i], zclipm[i])
                         self.a.set_xlim(self.y1, self.y2)
                         self.a.set_ylim(self.z1, self.z2)
-                    if self.viewopt[self.viewset][0] == 0:  # means Topview
+                    elif self.viewopt[self.viewset][0] == 0:  # means Topview
                         self.myplot(0, xclipm[0], yclipm[0],
                                     'X Distance in [m]', 'Y Distance in [m]',
                                     pttl='X-Y Trajecotry Projection')
@@ -797,7 +797,7 @@ class Manips(object):
                             self.a.plot(xclipm[i], yclipm[i])
                         self.a.set_xlim(self.x1, self.x2)
                         self.a.set_ylim(self.y1, self.y2)
-                    if self.viewopt[self.viewset][0] == 4:  # means Reynolds
+                    elif self.viewopt[self.viewset][0] == 4:  # means Reynolds
                         print nm.size(range(len(selnr)))
                         if nm.size(range(len(selnr))) == 1:  # Only one particle is selected in the picker
                             rest1 = self.multires[selnr[0]][0][:, 7]
@@ -834,6 +834,24 @@ class Manips(object):
                                         'Time in [s]', 'Reynolds', pttl='Reynolds')
                             self.a.plot(self.multires[0][0][:, 0], remin, color='b')
                             self.a.fill_between(self.multires[0][0][:, 0], remin, remax, where=None, color='black', alpha=0.2)
+                        self.a.set_xlim(self.x1, self.x2)
+                        self.a.set_ylim(self.y1, self.y2)
+                    else:  # Some Speed-View
+                        if nm.size(range(len(selnr))) == 1:  # Only one particle is selected in the picker
+                            self.myplot(0, self.multires[selnr[0]][0][:, 0],
+                                        self.multires[selnr[0]][0][:, self.viewopt[self.viewset][3]],
+                                        self.viewopt[self.viewset][5],
+                                        self.viewopt[self.viewset][6],
+                                        pttl=self.viewopt[self.viewset][8])
+                        else:  # more than one particle is selected
+                            self.myplot(0, self.multires[selnr[0]][0][:, 0],
+                                        self.multires[selnr[0]][0][:, self.viewopt[self.viewset][3]],
+                                        self.viewopt[self.viewset][5],
+                                        self.viewopt[self.viewset][6],
+                                        pttl=self.viewopt[self.viewset][8])
+                            for i in selnr:
+                                self.a.plot(self.multires[i][0][:, 0],
+                                            self.multires[i][0][:, self.viewopt[self.viewset][3]])
                         self.a.set_xlim(self.x1, self.x2)
                         self.a.set_ylim(self.y1, self.y2)
                         # print "People ask for Reynolds!"
