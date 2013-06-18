@@ -493,11 +493,12 @@ class Controlset(Manips):
 
             ### The particle picker in a treeview
             self.picker = ttk.Treeview(self.particleselector, height=6)
-            self.picker['columns'] = ('Nr', 'dp', 'rhop', 'v', 'elevation',
+            self.picker['columns'] = ('ID', 'dp', 'rhop', 'v', 'elevation',
                                       'azimuth', 'Initial X-Pos',
                                       'Initial Y-Pos', 'Initial Z-Pos')
-            self.picker['displaycolumns'] =[1, 2, 3, 4, 5, 6, 7, 8]
-            self.picker.column('#0', width=40, anchor=tki.CENTER, stretch=True)
+            self.picker['displaycolumns'] = [0, 1, 2, 3, 4, 5, 6, 7, 8]
+            self.picker.column('#0', width=0, stretch=False)
+            self.picker.column('ID', width=40, anchor=tki.CENTER, stretch=True)
             self.picker.column('dp', width=80, stretch=True)
             self.picker.column('rhop', width=90, stretch=True)
             self.picker.column('v', width=60, stretch=True)
@@ -506,17 +507,23 @@ class Controlset(Manips):
             self.picker.column('Initial X-Pos', width=60, stretch=True)
             self.picker.column('Initial Y-Pos', width=60, stretch=True)
             self.picker.column('Initial Z-Pos', width=60, stretch=True)
-            self.picker.heading('#0', text='ID')
-            self.picker.heading('dp', text='dp in µm', anchor=tki.W)
-            self.picker.heading('rhop', text='rhop in kg/m³', anchor=tki.W)
-            self.picker.heading('v', text='v in m/s', anchor=tki.W)
-            self.picker.heading('elevation', text='elev. in °deg', anchor=tki.W)
-            self.picker.heading('azimuth', text='azim. in °deg', anchor=tki.W)
-            self.picker.heading('Initial X-Pos', text='X in m', anchor=tki.W)
-            self.picker.heading('Initial Y-Pos', text='Y in m', anchor=tki.W)
-            self.picker.heading('Initial Z-Pos', text='Z in m', anchor=tki.W)
+            self.picker.heading('#0', text='')
+            self.picker.heading('ID', text='ID', command=lambda: self.TreeSort('ID', False))
+            self.picker.heading('dp', text='dp in µm', anchor=tki.W, command=lambda: self.TreeSort('dp', False))
+            self.picker.heading('rhop', text='rhop in kg/m³', anchor=tki.W, command=lambda: self.TreeSort('rhop', False))
+            self.picker.heading('v', text='v in m/s', anchor=tki.W, command=lambda: self.TreeSort('v', False))
+            self.picker.heading('elevation', text='elev. in °deg', anchor=tki.W, command=lambda: self.TreeSort('elevation', False))
+            self.picker.heading('azimuth', text='azim. in °deg', anchor=tki.W, command=lambda: self.TreeSort('azimuth', False))
+            self.picker.heading('Initial X-Pos', text='X in m', anchor=tki.W, command=lambda: self.TreeSort('Initial X-Pos', False))
+            self.picker.heading('Initial Y-Pos', text='Y in m', anchor=tki.W, command=lambda: self.TreeSort('Initial Y-Pos', False))
+            self.picker.heading('Initial Z-Pos', text='Z in m', anchor=tki.W, command=lambda: self.TreeSort('Initial Z-Pos', False))
             self.picker.grid(row=0, column=0, sticky='NSWE')
             self.picker.bind('<<TreeviewSelect>>', self.pickclick)
+            self.pickerbar = ttk.Scrollbar(self.particleselector)
+            # Connect the yview command to the scrollbar
+            self.pickerbar.config(command=self.picker.yview)
+            self.picker.config(yscrollcommand=self.pickerbar.set)
+            self.pickerbar.grid(row=0, column=1, sticky=tki.N+tki.S+tki.E+tki.W)
             self.set3dstate()
         else:
             print "aha, "+__name__+" imported that file"

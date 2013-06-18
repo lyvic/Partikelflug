@@ -281,8 +281,8 @@ class Manips(object):
     def SecondHalf2d(self):
         # Plotting the Data
         self.multires = Manips.multires
-        self.myplot(0, self.multires[0][0][:, 2], self.multires[0][0][:, 4], 'Time in [s]',
-                    'Speed in [m/s]', pttl='Speed-Time-Horizontal')
+        self.myplot(0, self.multires[0][0][:, 2], self.multires[0][0][:, 4], 'Horizontal distance in [m]',
+                    'Vertical distance in [m]]', pttl='Trajectory')
         # Adding a line for every dataset
         for i in range(1, int(self.partnumentm.get())):
             self.a.plot(self.multires[i][0][:, 2], self.multires[i][0][:, 4])
@@ -290,10 +290,11 @@ class Manips(object):
         for item in kill:
             self.picker.delete(item)
         for i in range(0, int(self.partnumentm.get())):
-            self.picker.insert('', 'end', text=str(i), values=[i, self.d3(self.dataset[i][1]),
+            self.picker.insert('', 'end', values=[i, self.d3(self.dataset[i][1]),
                                self.d3(self.dataset[i][0]), self.d3(self.dataset[i][2]),
                                self.d3(self.dataset[i][3]), '/', self.d3(self.dataset[i][6]),
                                '/', self.d3(self.dataset[i][7])])
+        self.scilables()
         self.Paper.show()
         return
 
@@ -321,6 +322,7 @@ class Manips(object):
                                self.d3(self.dataset[i][13]), self.d3(self.dataset[i][14]),
                                self.d3(self.dataset[i][15])])
         # Update the canvas to show the plots
+        self.scilables()
         self.Paper.show()
         return
 
@@ -511,6 +513,7 @@ class Manips(object):
                 pass
         # Make changes visible
         self.log()
+        self.scilables()
         self.Paper.show()
         return
 
@@ -608,7 +611,7 @@ class Manips(object):
         selnr = []
         if len(sel) != 0:
             for i in range(len(sel)):
-                selnr.append(int(self.picker.set(sel[i], column='Nr')))
+                selnr.append(int(self.picker.set(sel[i], column='ID')))
         else:
             for i in range(int(self.partnumentm.get())):
                 selnr.append(i)
@@ -726,19 +729,19 @@ class Manips(object):
                     if self.viewopt[self.viewset][0] == 1:  # means X View
                         self.myplot(0, xclip, zclip,
                                     'X Distance in [m]', 'Z Distance in [m]',
-                                    pttl='X-Z Trajecotry Projection')
+                                    pttl='X-Z Trajectory Projection')
                         self.a.set_xlim(self.x1, self.x2)
                         self.a.set_ylim(self.z1, self.z2)
                     elif self.viewopt[self.viewset][0] == 2:  # means Y View
                         self.myplot(0, yclip, zclip,
                                     'Y Distance in [m]', 'Z Distance in [m]',
-                                    pttl='Y-Z Trajecotry Projection')
+                                    pttl='Y-Z Trajectory Projection')
                         self.a.set_xlim(self.y1, self.y2)
                         self.a.set_ylim(self.z1, self.z2)
                     elif self.viewopt[self.viewset][0] == 0:  # means Topview
                         self.myplot(0, xclip, yclip,
                                     'X Distance in [m]', 'Y Distance in [m]',
-                                    pttl='X-Y Trajecotry Projection')
+                                    pttl='X-Y Trajectory Projection')
                         self.a.set_xlim(self.x1, self.x2)
                         self.a.set_ylim(self.y1, self.y2)
                     else:  # means Reynolds or some Speed view
@@ -776,7 +779,7 @@ class Manips(object):
                     if self.viewopt[self.viewset][0] == 1:  # means X View
                         self.myplot(0, xclipm[0], zclipm[0],
                                     'X Distance in [m]', 'Z Distance in [m]',
-                                    pttl='X-Z Trajecotry Projection')
+                                    pttl='X-Z Trajectory Projection')
                         for i in range(len(selnr)):
                             self.a.plot(xclipm[i], zclipm[i])
                         self.a.set_xlim(self.x1, self.x2)
@@ -784,7 +787,7 @@ class Manips(object):
                     elif self.viewopt[self.viewset][0] == 2:  # means Y View
                         self.myplot(0, yclipm[0], zclipm[0],
                                     'Y Distance in [m]', 'Z Distance in [m]',
-                                    pttl='Y-Z Trajecotry Projection')
+                                    pttl='Y-Z Trajectory Projection')
                         for i in range(len(selnr)):
                             self.a.plot(yclipm[i], zclipm[i])
                         self.a.set_xlim(self.y1, self.y2)
@@ -792,7 +795,7 @@ class Manips(object):
                     elif self.viewopt[self.viewset][0] == 0:  # means Topview
                         self.myplot(0, xclipm[0], yclipm[0],
                                     'X Distance in [m]', 'Y Distance in [m]',
-                                    pttl='X-Y Trajecotry Projection')
+                                    pttl='X-Y Trajectory Projection')
                         for i in range(len(selnr)):
                             self.a.plot(xclipm[i], yclipm[i])
                         self.a.set_xlim(self.x1, self.x2)
@@ -860,7 +863,7 @@ class Manips(object):
                 selnr = []
                 if len(sel) != 0:
                     for i in range(len(sel)):
-                        selnr.append(int(self.picker.set(sel[i], column='Nr')))
+                        selnr.append(int(self.picker.set(sel[i], column='ID')))
                 else:
                     for i in range(int(self.partnumentm.get())):
                         selnr.append(i)
@@ -921,9 +924,14 @@ class Manips(object):
                         self.a.plot(self.multires[0][0][:, self.plotx], remin, color='b')
                         self.a.fill_between(self.multires[0][0][:, self.plotx],
                                             remin, remax, where=None, color='b', alpha=0.3)
-                    print "something else"
                 self.a.set_xlim(self.x1, self.x2)
                 self.a.set_ylim(self.y1, self.y2)
+            else:
+                print "something else"
+                self.a.set_xlim(self.x1, self.x2)
+                self.a.set_ylim(self.y1, self.y2)
+            self.log()
+            self.scilables()
             self.Paper.show()
         except ValueError:
             # If the values can't be converted to a float
@@ -961,7 +969,8 @@ class Manips(object):
             self.a.set_title(pttl, fontsize=10)
             self.a.tick_params(axis='both', labelsize=10)
             self.DrawGrid()
-            self.a.ticklabel_format(style='sci', scilimits=(0, 0), axis='both')
+            #self.a.ticklabel_format(style='sci', scilimits=(0, 0), axis='both')
+            self.scilables()
             self.a.set_zlabel(zttl, fontsize=10)
             self.a.mouse_init()
         else:
@@ -974,11 +983,15 @@ class Manips(object):
             self.a.set_title(pttl, fontsize=10)
             self.a.tick_params(axis='both', labelsize=10)
             self.DrawGrid()
-            self.a.ticklabel_format(style='sci', scilimits=(0, 0), axis='both')
+            self.scilables()
+            #self.a.ticklabel_format(style='sci', scilimits=(0, 0), axis='both')
         return
 
     # def logy(self, event):
     #     self.logy2()
+
+    def scilables(self):
+        self.a.ticklabel_format(style='sci', scilimits=(0, 0), axis='both')
 
     def log(self):
         if self.chlogxvar.get() == 1:  # If the checkmark is set
@@ -1091,6 +1104,17 @@ class Manips(object):
         #     print self.picker.set(sel[i], column='Nr')
         self.SetAxis2()
         return
+
+    def TreeSort(self, who, reverse):
+        l = [(float(self.picker.set(k, who)), k) for k in self.picker.get_children()]
+        l.sort(reverse=reverse)
+
+        # rearrange items in sorted positions
+        for index, (val, k) in enumerate(l):
+            self.picker.move(k, '', index)
+
+        # reverse sort next time
+        self.picker.heading(who, command=lambda: self.TreeSort(who, not reverse))
 
 
 def calc_m3d(arg, **kwarg):
