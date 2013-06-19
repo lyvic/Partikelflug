@@ -171,18 +171,12 @@ class Manips(object):
         try:
             # Creates tuples of two and processes them with self.ingen()
             # Depending on the mode, we get a set, range or random datainput
-            self.rhopraw = tuple(map(float, self.rhopentm.get().split('-')))
-            self.rhop = self.ingen(self.multpartslcrhop.get(), self.rhopraw)
-            self.dpraw = tuple(map(float, self.dpentm.get().split('-')))
-            self.dp = self.ingen(self.multpartslcdp.get(), self.dpraw)
-            self.vraw = tuple(map(float, self.velentm.get().split('-')))
-            self.v = self.ingen(self.multpartslcvel.get(), self.vraw)
-            self.angleeraw = tuple(map(float, self.angleeentm.get().split('-')))
-            self.anglee = self.ingen(self.multpartslcanglee.get(), self.angleeraw)
-            self.posxraw = tuple(map(float, self.posxentm.get().split('-')))
-            self.posx = self.ingen(self.multpartslcposx.get(), self.posxraw)
-            self.poszraw = tuple(map(float, self.poszentm.get().split('-')))
-            self.posz = self.ingen(self.multpartslcposz.get(), self.poszraw)
+            self.rhop = self.ingen(self.multpartslcrhop.get(), self.rhopentm.get())
+            self.dp = self.ingen(self.multpartslcdp.get(), self.dpentm.get())
+            self.v = self.ingen(self.multpartslcvel.get(), self.velentm.get())
+            self.anglee = self.ingen(self.multpartslcanglee.get(), self.angleeentm.get())
+            self.posx = self.ingen(self.multpartslcposx.get(), self.posxentm.get())
+            self.posz = self.ingen(self.multpartslcposz.get(), self.poszentm.get())
             # The following values should rather be fixed and not randomized.
             self.prec = float(self.precent.get())
             self.duration = float(self.durationent.get())
@@ -194,41 +188,44 @@ class Manips(object):
             if self.set3dstatevar == 0:  # In 2D Mode
                 self.currentdata = 3  # Multiple particles in 2D
                 # Inform user about the configuration.
-                self.entries = "Density: %.2f to %.2f kg/m³ \n"\
-                               "Particle size: %.2f to %.2f µm\n" \
-                               "Velocity: %.2f to %.2f m/s \n"\
-                               "Elevation: %.2f to %.2f°\n"\
-                               "Precision set to %s \nDuration set to %s\n"\
+                # self. entries = 'Multiple Particles ... to be fixed'
+                self.entries = "Density: %s with %s kg/m³ \n"\
+                               "Particle size: %s with %s µm\n" \
+                               "Velocity: %s with %s m/s \n"\
+                               "Elevation: %s with %s°\n"\
+                               "Precision set to %.2f \nDuration set to %.2f\n"\
                                "Horizontal Wind: %.2f m/s\n"\
                                "Vertical Wind: %.2f m/s\n"\
                                "Calculations running, please wait ... \n" \
-                               % (self.rhopraw[0], self.rhopraw[1], self.dpraw[0],
-                                  self.dpraw[1], self.vraw[0], self.vraw[1],
-                                  self.angleeraw[0], self.angleeraw[1], self.prec,
-                                  self.duration, self.windx, self.windz)
+                               % (self.multpartslcrhop.get(), self.rhopentm.get(),
+                                  self.multpartslcdp.get(), self.dpentm.get(),
+                                  self.multpartslcvel.get(), self.velentm.get(),
+                                  self.multpartslcanglee.get(), self.angleeentm.get(),
+                                  self.prec, self.duration,
+                                  self.windx, self.windz)
             else:  # in 3D Mode
                 self.currentdata = 4  # Multiple particles in 3D
                 # Here we have two more options to read
-                self.anglearaw = tuple(map(float, self.angleaentm.get().split('-')))
-                self.anglea = self.ingen(self.multpartslcanglea.get(), self.anglearaw)
-                self.posyraw = tuple(map(float, self.posyentm.get().split('-')))
-                self.posy = self.ingen(self.multpartslcposy.get(), self.posyraw)
+                self.anglea = self.ingen(self.multpartslcanglea.get(), self.angleaentm.get())
+                self.posy = self.ingen(self.multpartslcposy.get(), self.posyentm.get())
                 self.windy = float(self.windyent.get())
                 # Inform user about the configuration.
-                self.entries = "Density: %.2f to %.2f kg/m³ \n"\
-                               "Particle size: %.2f to %.2f µm\n" \
-                               "Velocity: %.2f to %.2f m/s \n"\
-                               "Elevation: %.2f° to %.2f°\n"\
-                               "Azimuth: %.2f° to %.2f°\n"\
-                               "Precision set to %s \nDuration set to %s\n"\
+                self.entries = "Density: %s with %s kg/m³ \n"\
+                               "Particle size: %s with %s µm\n" \
+                               "Velocity: %s with %s m/s \n"\
+                               "Elevation: %s with %s°\n"\
+                               "Azimuth: %s° with %s°\n"\
+                               "Precision set to %.2f \nDuration set to %.2f\n"\
                                "Wind in X: %.2f m/s\nWind in Y : %.2f m/s\n"\
                                "Wind in Z: %.2f m/s\n"\
                                "Calculations running, please wait ... \n" \
-                               % (self.rhopraw[0], self.rhopraw[1], self.dpraw[0],
-                                  self.dpraw[1], self.vraw[0], self.vraw[1],
-                                  self.angleeraw[0], self.angleeraw[1], self.anglearaw[0],
-                                  self.anglearaw[1], self.prec, self.duration, self.windx,
-                                  self.windy, self.windz)
+                               % (self.multpartslcrhop.get(), self.rhopentm.get(),
+                                  self.multpartslcdp.get(), self.dpentm.get(),
+                                  self.multpartslcvel.get(), self.velentm.get(),
+                                  self.multpartslcanglee.get(), self.angleeentm.get(),
+                                  self.multpartslcanglea.get(), self.angleaentm.get(),
+                                  self.prec, self.duration,
+                                  self.windx, self.windy, self.windz)
 
         except ValueError:  # If reading the values failes
             self.message = "No valid values entered\n"
@@ -316,7 +313,7 @@ class Manips(object):
         for item in kill:
             self.picker.delete(item)
         for i in range(0, int(self.partnumentm.get())):
-            self.picker.insert('', 'end', text=str(i), values=[i, self.d3(self.dataset[i][1]),
+            self.picker.insert('', 'end', values=[i, self.d3(self.dataset[i][1]),
                                self.d3(self.dataset[i][0]), self.d3(self.dataset[i][2]),
                                self.d3(self.dataset[i][3]), self.d3(self.dataset[i][4]),
                                self.d3(self.dataset[i][13]), self.d3(self.dataset[i][14]),
@@ -339,11 +336,13 @@ class Manips(object):
         valout = []
         # A set is the simple separation of input values by '-'
         if gen_mode == 'Set':
+            valin = tuple(map(float, valin.split(':')))
             valout = list(valin)
             print valout
             return valout
         # For Range, the given interval is split up in equally long sets
         elif gen_mode == 'Range':
+            valin = tuple(map(float, valin.split(':')))
             steps = (valin[1]-valin[0])/(n-1)
             valout = [valin[0]]
             for x in range(1, n):
@@ -352,8 +351,31 @@ class Manips(object):
             return valout
         # For random, the values are randomly chosen from within the given interval
         elif gen_mode == 'Random':
+            valin = tuple(map(float, valin.split(':')))
             for i in range(1, n+1):
                 valout.append(random.uniform(valin[0], valin[1]))
+            print valout
+            return valout
+        elif gen_mode == 'Pattern in':
+            rep = tuple(map(str, valin.split('*')))
+            print rep
+            sequence = rep[1].strip('[]')
+            print sequence
+            sequence = tuple(map(float, sequence.split(':')))
+            for i in range(int(rep[0])):
+                for x in range(len(sequence)):
+                    valout.append(sequence[x])
+            print valout
+            return valout
+        elif gen_mode == 'Pattern out':
+            rep = tuple(map(str, valin.split('*')))
+            print rep
+            sequence = rep[1].strip('[]')
+            print sequence
+            sequence = tuple(map(float, sequence.split(':')))
+            for i in range(len(sequence)):
+                for x in range(int(rep[0])):
+                    valout.append(sequence[i])
             print valout
             return valout
         else:
@@ -1116,6 +1138,12 @@ class Manips(object):
         # reverse sort next time
         self.picker.heading(who, command=lambda: self.TreeSort(who, not reverse))
 
+    def Counter(self, setto='up'):
+        if setto != 'up':
+            self.done = setto
+        else:
+            self.done = self.done+1
+
 
 def calc_m3d(arg, **kwarg):
     return CalculateM.calculate_m3d(*arg, **kwarg)
@@ -1141,16 +1169,19 @@ class Slave(threading.Thread):
 class CalculateM(object):
 
     def run(self, guest, data, mode='2d'):
+        guest.progress.configure(maximum=float(guest.partnumentm.get()))
         begin = time.time()
+        manager = multiprocessing.Manager()
+        lock = manager.Lock()
         # Counting the number of available CPUs in System
         pool_size = multiprocessing.cpu_count()
         # Creating a pool of processes with the maximal number of CPUs possible
         pool = multiprocessing.Pool(processes=pool_size)
         # Call the corresponding function depending on 2D or 3D mode
         if mode == '3d':
-            Manips.multires = pool.map_async(calc_m3d, zip([self]*len(data), data)).get()
+            Manips.multires = pool.map_async(calc_m3d, (zip([self]*len(data), [lock]*len(data), data))).get()
         else:
-            Manips.multires = pool.map_async(calc_m, zip([self]*len(data), data)).get()
+            Manips.multires = pool.map_async(calc_m, (zip([self]*len(data), [lock]*len(data), data))).get()
         # Properly close and end all processes, once we're done
         pool.close()
         pool.join()
@@ -1164,23 +1195,79 @@ class CalculateM(object):
 
     # Function to be called for multiple particles in 2D mode
     # Receives all parameters needed in a list: indata
-    def calculate_m(self, indata):
+    def calculate_m(self, lock, indata):
         # This might print oddly as we haven't applied any locks
+        lock.acquire()
         print 'Reading values and calling Octave'
+        lock.release()
         # Calling octave
         [Calculate.y, Calculate.y2] = \
             oc.call('Wurfp3.m', [indata],
                     verbose=False)  # For debugging change to TRUE or use octave
+        lock.acquire()
         print 'Done! Data from Octave available'
+        lock.release()
         return [Calculate.y, Calculate.y2]
 
     # Function to be called for multiple particles in 3D mode
     # Receives all parameters needed in a list: indata
-    def calculate_m3d(self, indata):
+    def calculate_m3d(self, lock, indata):
         # This might print oddly as there are no locks used
+        lock.acquire()
         print 'Reading values and calling Octave'
+        lock.release()
+
         [Calculate.y, Calculate.y2] = \
             oc.call('Wurf3D.m', [indata],
                     verbose=False)  # Use octave for debugging, keep on false
+        lock.acquire()
         print 'Done! Data from Octave available'
+        lock.release()
         return [Calculate.y, Calculate.y2]
+
+# class CalculateM(object):
+
+#     def run(self, guest, data, mode='2d'):
+#         begin = time.time()
+#         # Counting the number of available CPUs in System
+#         pool_size = multiprocessing.cpu_count()
+#         # Creating a pool of processes with the maximal number of CPUs possible
+#         pool = multiprocessing.Pool(processes=pool_size)
+#         # Call the corresponding function depending on 2D or 3D mode
+#         if mode == '3d':
+#             Manips.multires = pool.map_async(calc_m3d, (zip([self]*len(data), data))).get()
+#         else:
+#             Manips.multires = pool.map_async(calc_m, (zip([self]*len(data), data))).get()
+#         # Properly close and end all processes, once we're done
+#         pool.close()
+#         pool.join()
+#         end = time.time()
+#         if mode == '3d':
+#             guest.SecondHalf3d()
+#         else:
+#             guest.SecondHalf2d()
+#         print (end - begin)
+#         return
+
+#     # Function to be called for multiple particles in 2D mode
+#     # Receives all parameters needed in a list: indata
+#     def calculate_m(self, indata):
+#         # This might print oddly as we haven't applied any locks
+#         print 'Reading values and calling Octave'
+#         # Calling octave
+#         [Calculate.y, Calculate.y2] = \
+#             oc.call('Wurfp3.m', [indata],
+#                     verbose=False)  # For debugging change to TRUE or use octave
+#         print 'Done! Data from Octave available'
+#         return [Calculate.y, Calculate.y2]
+
+#     # Function to be called for multiple particles in 3D mode
+#     # Receives all parameters needed in a list: indata
+#     def calculate_m3d(self, indata):
+#         # This might print oddly as there are no locks used
+#         print 'Reading values and calling Octave'
+#         [Calculate.y, Calculate.y2] = \
+#             oc.call('Wurf3D.m', [indata],
+#                     verbose=False)  # Use octave for debugging, keep on false
+#         print 'Done! Data from Octave available'
+#         return [Calculate.y, Calculate.y2]

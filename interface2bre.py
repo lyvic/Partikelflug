@@ -229,31 +229,35 @@ class Controlset(Manips):
             self.partnumentm.insert(0, 10)
             # Density
             self.rhopentm = ttk.Entry(self.paramultpart, width=10)
-            self.rhopentm.insert(0, '2900-2900')
+            self.rhopentm.insert(0, '2900:2900')
             # diameter
             self.dpentm = ttk.Entry(self.paramultpart, width=10)
-            self.dpentm.insert(0, '1000-1000')
+            self.dpentm.insert(0, '1000:1000')
             # velocity
             self.velentm = ttk.Entry(self.paramultpart, width=10)
-            self.velentm.insert(0, '15-15')
+            self.velentm.insert(0, '15:15')
             # angle lift
             self.angleeentm = ttk.Entry(self.paramultpart, width=10)
-            self.angleeentm.insert(0, '20-50')
+            self.angleeentm.insert(0, '20:50')
             # angle turn
             self.angleaentm = ttk.Entry(self.paramultpart, width=10)
-            self.angleaentm.insert(0, '0-0')
+            self.angleaentm.insert(0, '0:0')
             # Initial Position
             self.posxentm = ttk.Entry(self.paramultpart, width=10)
-            self.posxentm.insert(0, '0-0')
+            self.posxentm.insert(0, '0:0')
             self.posyentm = ttk.Entry(self.paramultpart, width=10)
-            self.posyentm.insert(0, '0-3')
+            self.posyentm.insert(0, '0:3')
             self.poszentm = ttk.Entry(self.paramultpart, width=10)
-            self.poszentm.insert(0, '0-0')
+            self.poszentm.insert(0, '0:0')
             # Run Button
             self.RunButton1m = ttk.Button(self.paramultpart, text='Run',
                                           command=self.RunThis2m)
+            # Progressbar
+            self.done = 0
+            self.progress = ttk.Progressbar(self.paramultpart, length=100,
+                                            mode='determinate', variable=self.done)
             # Set, Range, Random options
-            self.multselval = ('Set', 'Range', 'Random')
+            self.multselval = ('Set', 'Range', 'Random', 'Pattern in', 'Pattern out')
             # Numb
             self.multpartslcnum = tki.StringVar(self.paramultpart)
             self.multselpartnum = ttk.Combobox(self.paramultpart, values=self.multselval,
@@ -338,6 +342,7 @@ class Controlset(Manips):
             self.multselposy.grid(row=7, column=1, sticky="W")
             self.multselposz.grid(row=8, column=1, sticky="W")
             self.RunButton1m.grid(row=9, column=0, sticky="SW")
+            self.progress.grid(row=9, column=2, sticky="E")
             self.RunButton1m.bind('<Return>', self.RunThis2m)
 
             ### Configuration
@@ -499,15 +504,15 @@ class Controlset(Manips):
             self.picker['displaycolumns'] = [0, 1, 2, 3, 4, 5, 6, 7, 8]
             self.picker.column('#0', width=0, stretch=False)
             self.picker.column('ID', width=40, anchor=tki.CENTER, stretch=True)
-            self.picker.column('dp', width=80, stretch=True)
-            self.picker.column('rhop', width=90, stretch=True)
+            self.picker.column('dp', width=75, stretch=True)
+            self.picker.column('rhop', width=95, stretch=True)
             self.picker.column('v', width=60, stretch=True)
-            self.picker.column('elevation', width=80, stretch=True)
-            self.picker.column('azimuth', width=80, stretch=True)
-            self.picker.column('Initial X-Pos', width=60, stretch=True)
-            self.picker.column('Initial Y-Pos', width=60, stretch=True)
-            self.picker.column('Initial Z-Pos', width=60, stretch=True)
-            self.picker.heading('#0', text='')
+            self.picker.column('elevation', width=90, stretch=True)
+            self.picker.column('azimuth', width=95, stretch=True)
+            self.picker.column('Initial X-Pos', width=55, stretch=True)
+            self.picker.column('Initial Y-Pos', width=55, stretch=True)
+            self.picker.column('Initial Z-Pos', width=55, stretch=True)
+            #self.picker.heading('#0', text='')
             self.picker.heading('ID', text='ID', command=lambda: self.TreeSort('ID', False))
             self.picker.heading('dp', text='dp in µm', anchor=tki.W, command=lambda: self.TreeSort('dp', False))
             self.picker.heading('rhop', text='rhop in kg/m³', anchor=tki.W, command=lambda: self.TreeSort('rhop', False))
