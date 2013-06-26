@@ -17,6 +17,7 @@ import Tkinter as tki
 from pfCalculates import *
 from manips import *
 import numpy as nm
+import handout
 
 
 class Controlset(Manips):
@@ -27,14 +28,15 @@ class Controlset(Manips):
         self.buildGUI()
         return
 
-    def myclose(self):
-        sys.exit(0)
-        return
+    # def myclose(self):
+    #     self.main.destroy()
+    #     sys.exit(0)
+    #     return
 
     def buildGUI(self):
         if __name__ == '__main__':
             self.mainw = tki.Tk()
-            self.mainw.protocol("WM_DELETE_WINDOW", self.myclose)  # Exit properly
+            self.mainw.protocol("WM_DELETE_WINDOW", self.mainw.destroy)  # Exit properly
             self.mainw.title("Partikelflug")
             self.mainw.geometry('+10+10')
             self.set3dstatevar = 1  # 3D mode is on and will be disabled
@@ -253,9 +255,9 @@ class Controlset(Manips):
             self.RunButton1m = ttk.Button(self.paramultpart, text='Run',
                                           command=self.RunThis2m)
             # Progressbar
-            self.done = 0
-            self.progress = ttk.Progressbar(self.paramultpart, length=100,
-                                            mode='determinate', variable=self.done)
+            # self.done = 0
+            self.progress = ttk.Progressbar(self.paramultpart,
+                                            mode='determinate', variable=handout.progressbar)
             # Set, Range, Random options
             self.multselval = ('Set', 'Range', 'Random', 'Pattern in', 'Pattern out')
             # Numb
@@ -316,7 +318,7 @@ class Controlset(Manips):
 
             # Positioning
             self.partnumlabm.grid(row=0, column=0, sticky="W")
-            self.partnumentm.grid(row=0, column=2, sticky="W")
+            self.partnumentm.grid(row=0, column=2, sticky="E")
             self.rhoplabm.grid(row=1, column=0, sticky="W")
             self.rhopentm.grid(row=1, column=2, sticky="E")
             self.dplabm.grid(row=2, column=0, sticky="W")
@@ -342,7 +344,7 @@ class Controlset(Manips):
             self.multselposy.grid(row=7, column=1, sticky="W")
             self.multselposz.grid(row=8, column=1, sticky="W")
             self.RunButton1m.grid(row=9, column=0, sticky="SW")
-            self.progress.grid(row=9, column=2, sticky="E")
+            self.progress.grid(row=9, column=1, columnspan=2, sticky="EW")
             self.RunButton1m.bind('<Return>', self.RunThis2m)
 
             ### Configuration

@@ -5,6 +5,7 @@
 # importing libraries
 import time
 import threading
+import handout
 import numpy as nm
 import decimal as dc
 from oct2py import octave as oc
@@ -14,6 +15,23 @@ import Tkinter as tki
 ### The following functions are outside of the manips class
 ### Why? I don't really know, but otherwise the multiprocessing doesn't work.
 # Multiparticle calculations
+
+
+class TheProgress(threading.Thread):
+    def __init__(self, guest, num):
+        self.num = num
+        self.guest = guest
+        threading.Thread.__init__(self)
+
+    def run(self):
+        while handout.progressbar != self.num:
+            self.guest.progress.configure(value=handout.progressbar)
+            print "Yes, I'm doing work"
+            print handout.progressbar
+            time.sleep(1)
+        return
+
+
 class Calculate3D(threading.Thread):
     def __init__(self, guest, rhop, dp, v, anglee, anglea, prec,
                  duration, windx, windy, windz, rhog, eta, grav,

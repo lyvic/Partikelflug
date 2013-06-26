@@ -6,12 +6,14 @@ The core of any feature should be found here."""
 
 # Importing modules
 import numpy as nm
+import time
 import random
 import decimal as dc
 from mpl_toolkits.mplot3d import axes3d  # This moduls is needed!
 import Tkinter as tki
 from pfCalculates import *
 import multiprocessing
+import handout
 
 
 ### Manips class. Everything here is basically encapsuled
@@ -273,16 +275,16 @@ class Manips(object):
         if self.set3dstatevar == 1:  # In 3D Mode
             self.multi = Slave(self, self.dataset, mode='3d')
             self.multires = self.multi.start()  # Calling octave
-            return
+        return
 
     def SecondHalf2d(self):
         # Plotting the Data
-        self.multires = Manips.multires
+        self.multires = Manips.multires.get()
         self.myplot(0, self.multires[0][0][:, 2], self.multires[0][0][:, 4], 'Horizontal distance in [m]',
                     'Vertical distance in [m]]', pttl='Trajectory')
         # Adding a line for every dataset
         for i in range(1, int(self.partnumentm.get())):
-            self.a.plot(self.multires[i][0][:, 2], self.multires[i][0][:, 4])
+            self.a.plot(self.multires[i][0][:, 2], self.multires[i][0][:, 4], color='b')
         kill = self.picker.get_children()
         for item in kill:
             self.picker.delete(item)
@@ -296,7 +298,7 @@ class Manips(object):
         return
 
     def SecondHalf3d(self):
-        self.multires = Manips.multires
+        self.multires = Manips.multires.get()
         # Plotting the Data
         self.myplot(1, self.multires[0][0][:, 4],
                     self.multires[0][0][:, 5],
@@ -308,7 +310,7 @@ class Manips(object):
         # Adding a line for every dataset
         for i in range(1, int(self.partnumentm.get())):
             self.a.plot(self.multires[i][0][:, 4], self.multires[i][0][:, 5],
-                        self.multires[i][0][:, 6])
+                        self.multires[i][0][:, 6], color='b')
         kill = self.picker.get_children()
         for item in kill:
             self.picker.delete(item)
@@ -444,11 +446,11 @@ class Manips(object):
                             pttl=ind[8])
                 if ind[1] == 0:
                     for i in range(1, int(self.partnumentm.get())):
-                        self.a.plot(self.multires[i][0][:, ind[2]], self.multires[i][0][:, ind[3]])
+                        self.a.plot(self.multires[i][0][:, ind[2]], self.multires[i][0][:, ind[3]], color='b')
                 else:
                     for i in range(1, int(self.partnumentm.get())):
                         self.a.plot(self.multires[i][0][:, ind[2]], self.multires[i][0][:, ind[3]],
-                                    self.multires[i][0][:, ind[4]])
+                                    self.multires[i][0][:, ind[4]], color='b')
                 if ind[0] == 4:  # means Reynolds
                     remax = self.multires[0][0][:, ind[3]] * 1
                     remin = self.multires[0][0][:, ind[3]] * 1
@@ -486,7 +488,7 @@ class Manips(object):
                                     pttl=self.figtitle)
                         for i in range(1, int(self.partnumentm.get())):
                             self.a.plot(self.multires[i][0][:, self.plotx],
-                                        self.multires[i][0][:, self.ploty])
+                                        self.multires[i][0][:, self.ploty], color='b')
                 else:  # We are plotting Reynolds
                     if self.currentdata == 1:  # Single Particle in 2D
                         rest1 = Calculate.y[:, self.ploty]
@@ -691,36 +693,37 @@ class Manips(object):
                     # Has to undergo manual clipping as the mplot3D library
                     # Is not capable enough to properly display the lines
                     # plotting all other lines of the dataset
-                        if selnr[0] != 0:
-                            firstline = self.firstplot.pop(0)
-                            firstline.remove()
-                            del firstline
-                        for i in selnr:
-                            xdat = self.multires[i][0][:, 4]*1
-                            ydat = self.multires[i][0][:, 5]*1
-                            zdat = self.multires[i][0][:, 6]*1
-                            xdat, ydat, zdat = self.intersect(xdat, xdat, ydat, zdat,
-                                                              self.x1, 0)
-                            xdat, ydat, zdat = self.intersect(xdat, xdat, ydat, zdat,
-                                                              self.x2, 0)
-                            xdat, ydat, zdat = self.intersect(ydat, xdat, ydat, zdat,
-                                                              self.y1, 1)
-                            xdat, ydat, zdat = self.intersect(ydat, xdat, ydat, zdat,
-                                                              self.y2, 1)
-                            xdat, ydat, zdat = self.intersect(zdat, xdat, ydat, zdat,
-                                                              self.z1, 2)
-                            xdat, ydat, zdat = self.intersect(zdat, xdat, ydat, zdat,
-                                                              self.z2, 2)
-                            xclip, yclip, zclip =\
-                                self.manclip(xdat, ydat, zdat,
-                                             (self.x1, self.x2),
-                                             (self.y1, self.y2),
-                                             (self.z1, self.z2))
-                            self.a.plot(xclip, yclip, zclip)
+                    if selnr[0] != 0:
+                        firstline = self.firstplot.pop(0)
+                        firstline.remove()
+                        del firstline
+                    for i in selnr:
+                        xdat = self.multires[i][0][:, 4]*1
+                        ydat = self.multires[i][0][:, 5]*1
+                        zdat = self.multires[i][0][:, 6]*1
+                        xdat, ydat, zdat = self.intersect(xdat, xdat, ydat, zdat,
+                                                          self.x1, 0)
+                        xdat, ydat, zdat = self.intersect(xdat, xdat, ydat, zdat,
+                                                          self.x2, 0)
+                        xdat, ydat, zdat = self.intersect(ydat, xdat, ydat, zdat,
+                                                          self.y1, 1)
+                        xdat, ydat, zdat = self.intersect(ydat, xdat, ydat, zdat,
+                                                          self.y2, 1)
+                        xdat, ydat, zdat = self.intersect(zdat, xdat, ydat, zdat,
+                                                          self.z1, 2)
+                        xdat, ydat, zdat = self.intersect(zdat, xdat, ydat, zdat,
+                                                          self.z2, 2)
+                        xclip, yclip, zclip =\
+                            self.manclip(xdat, ydat, zdat,
+                                         (self.x1, self.x2),
+                                         (self.y1, self.y2),
+                                         (self.z1, self.z2))
+                        self.a.plot(xclip, yclip, zclip, color='b')
                     # Finally, set the scale
-                self.a.set_zlim(self.z1, self.z2)
-                self.a.set_xlim(self.x1, self.x2)
-                self.a.set_ylim(self.y1, self.y2)
+                    print "setting scales"
+                    self.a.set_zlim(self.z1, self.z2)
+                    self.a.set_xlim(self.x1, self.x2)
+                    self.a.set_ylim(self.y1, self.y2)
             elif self.set3dstatevar == 1 and self.viewopt[self.viewset][0] != 3:
                 print "3D Mode, but 2D view"
                 if self.currentdata == 2:  # Single Particle 3D mode
@@ -803,7 +806,7 @@ class Manips(object):
                                     'X Distance in [m]', 'Z Distance in [m]',
                                     pttl='X-Z Trajectory Projection')
                         for i in range(len(selnr)):
-                            self.a.plot(xclipm[i], zclipm[i])
+                            self.a.plot(xclipm[i], zclipm[i], color='b')
                         self.a.set_xlim(self.x1, self.x2)
                         self.a.set_ylim(self.z1, self.z2)
                     elif self.viewopt[self.viewset][0] == 2:  # means Y View
@@ -811,7 +814,7 @@ class Manips(object):
                                     'Y Distance in [m]', 'Z Distance in [m]',
                                     pttl='Y-Z Trajectory Projection')
                         for i in range(len(selnr)):
-                            self.a.plot(yclipm[i], zclipm[i])
+                            self.a.plot(yclipm[i], zclipm[i], color='b')
                         self.a.set_xlim(self.y1, self.y2)
                         self.a.set_ylim(self.z1, self.z2)
                     elif self.viewopt[self.viewset][0] == 0:  # means Topview
@@ -819,7 +822,7 @@ class Manips(object):
                                     'X Distance in [m]', 'Y Distance in [m]',
                                     pttl='X-Y Trajectory Projection')
                         for i in range(len(selnr)):
-                            self.a.plot(xclipm[i], yclipm[i])
+                            self.a.plot(xclipm[i], yclipm[i], color='b')
                         self.a.set_xlim(self.x1, self.x2)
                         self.a.set_ylim(self.y1, self.y2)
                     elif self.viewopt[self.viewset][0] == 4:  # means Reynolds
@@ -876,7 +879,8 @@ class Manips(object):
                                         pttl=self.viewopt[self.viewset][8])
                             for i in selnr:
                                 self.a.plot(self.multires[i][0][:, 0],
-                                            self.multires[i][0][:, self.viewopt[self.viewset][3]])
+                                            self.multires[i][0][:, self.viewopt[self.viewset][3]],
+                                            color='b')
                         self.a.set_xlim(self.x1, self.x2)
                         self.a.set_ylim(self.y1, self.y2)
                         # print "People ask for Reynolds!"
@@ -907,7 +911,7 @@ class Manips(object):
                         del firstline
                     for i in selnr:
                         self.a.plot(self.multires[i][0][:, self.plotx],
-                                    self.multires[i][0][:, self.ploty])
+                                    self.multires[i][0][:, self.ploty], color='b')
                 else:  # We are plotting Reynolds
                     if len(selnr) == 1:  # Single line in 2D
                         rest1 = self.multires[selnr[0]][0][:, self.ploty]
@@ -985,13 +989,12 @@ class Manips(object):
             self.a = self.f.add_subplot(111, projection='3d')
             self.f.subplots_adjust(bottom=0.05, left=0.05,
                                    right=0.95, top=0.95)
-            self.firstplot = self.a.plot(xdat, ydat, zdat)
+            self.firstplot = self.a.plot(xdat, ydat, zdat, color='blue')
             self.a.set_xlabel(xttl, fontsize=10)
             self.a.set_ylabel(yttl, fontsize=10)
             self.a.set_title(pttl, fontsize=10)
             self.a.tick_params(axis='both', labelsize=10)
             self.DrawGrid()
-            #self.a.ticklabel_format(style='sci', scilimits=(0, 0), axis='both')
             self.scilables()
             self.a.set_zlabel(zttl, fontsize=10)
             self.a.mouse_init()
@@ -999,14 +1002,13 @@ class Manips(object):
             self.a = self.f.add_subplot(111)
             self.f.subplots_adjust(bottom=0.11, left=0.11,
                                    right=0.92, top=0.92)
-            self.firstplot = self.a.plot(xdat, ydat)
+            self.firstplot = self.a.plot(xdat, ydat, color='blue')
             self.a.set_xlabel(xttl, fontsize=10)
             self.a.set_ylabel(yttl, fontsize=10)
             self.a.set_title(pttl, fontsize=10)
             self.a.tick_params(axis='both', labelsize=10)
             self.DrawGrid()
             self.scilables()
-            #self.a.ticklabel_format(style='sci', scilimits=(0, 0), axis='both')
         return
 
     # def logy(self, event):
@@ -1070,6 +1072,12 @@ class Manips(object):
 
     # Manual clipping for the screwed up view in mplot3D
     def intersect(self, adat, xdat, ydat, zdat, alim, axis):
+        self.x1 = float(self.xaxisscalef.get())
+        self.x2 = float(self.xaxisscalet.get())
+        self.y1 = float(self.yaxisscalef.get())
+        self.y2 = float(self.yaxisscalet.get())
+        self.z1 = float(self.zaxisscalef.get())
+        self.z2 = float(self.zaxisscalet.get())
         # Clipping manually
         # Find intersection in a range
         # Pull down intersection points to lower limit, so zero crossing occurs
@@ -1086,11 +1094,20 @@ class Manips(object):
             x = (alim-a[axis])/vect[axis]
             np = (a + x*vect)
             # if axis == 0:
-            #     self.a.scatter(np[0], np[1], np[2], marker='o', color='r')
+            #     if (np[0] <= self.x2+1e-5 and np[0] >= self.x1-1e-5 and
+            #         np[1] <= self.y2+1e-5 and np[1] >= self.y1-1e-5 and
+            #         np[2] <= self.z2+1e-5 and np[2] >= self.z1-1e-5):
+            #             self.a.scatter(np[0], np[1], np[2], marker='o', color='r')
             # if axis == 1:
-            #     self.a.scatter(np[0], np[1], np[2], marker='o', color='g')
+            #     if (np[0] <= self.x2+1e-5 and np[0] >= self.x1-1e-5 and
+            #         np[1] <= self.y2+1e-5 and np[1] >= self.y1-1e-5 and
+            #         np[2] <= self.z2+1e-5 and np[2] >= self.z1-1e-5):
+            #             self.a.scatter(np[0], np[1], np[2], marker='o', color='g')
             # if axis == 2:
-            #     self.a.scatter(np[0], np[1], np[2], marker='o', color='m')
+            #     if (np[0] <= self.x2+1e-5 and np[0] >= self.x1-1e-5 and
+            #         np[1] <= self.y2+1e-5 and np[1] >= self.y1-1e-5 and
+            #         np[2] <= self.z2+1e-5 and np[2] >= self.z1-1e-5):
+            #             self.a.scatter(np[0], np[1], np[2], marker='o', color='m')
             xdat = nm.insert(xdat, (zero_crossings[i]+1), np[0])
             ydat = nm.insert(ydat, (zero_crossings[i]+1), np[1])
             zdat = nm.insert(zdat, (zero_crossings[i]+1), np[2])
@@ -1138,12 +1155,6 @@ class Manips(object):
         # reverse sort next time
         self.picker.heading(who, command=lambda: self.TreeSort(who, not reverse))
 
-    def Counter(self, setto='up'):
-        if setto != 'up':
-            self.done = setto
-        else:
-            self.done = self.done+1
-
 
 def calc_m3d(arg, **kwarg):
     return CalculateM.calculate_m3d(*arg, **kwarg)
@@ -1169,19 +1180,50 @@ class Slave(threading.Thread):
 class CalculateM(object):
 
     def run(self, guest, data, mode='2d'):
-        guest.progress.configure(maximum=float(guest.partnumentm.get()))
-        begin = time.time()
+        print"Warming up, please wait..."
+        time.sleep(1)
+        maximum = int(guest.partnumentm.get())
+        guest.progress.configure(maximum=maximum, value=0)
         manager = multiprocessing.Manager()
+        queue = manager.Queue()
         lock = manager.Lock()
         # Counting the number of available CPUs in System
         pool_size = multiprocessing.cpu_count()
         # Creating a pool of processes with the maximal number of CPUs possible
         pool = multiprocessing.Pool(processes=pool_size)
+        begin = time.time()
         # Call the corresponding function depending on 2D or 3D mode
         if mode == '3d':
-            Manips.multires = pool.map_async(calc_m3d, (zip([self]*len(data), [lock]*len(data), data))).get()
+            Manips.multires = pool.map_async(calc_m3d, (zip([self]*len(data),
+                                                        [lock]*len(data),
+                                                        [queue]*len(data),
+                                                        data)))
         else:
-            Manips.multires = pool.map_async(calc_m, (zip([self]*len(data), [lock]*len(data), data))).get()
+            Manips.multires = pool.map_async(calc_m, (zip([self]*len(data),
+                                                      [lock]*len(data),
+                                                      [queue]*len(data),
+                                                      data)))
+        # print "5\n"
+        # time.sleep(1)
+        # print "4\n"
+        # time.sleep(1)
+        # print "3\n"
+        # time.sleep(1)
+        # print "2\n"
+        # time.sleep(1)
+        # print "1\n"
+        # time.sleep(1)
+        # print "Get right into it!"
+        for job in range(1, maximum+1):
+            # lock.acquire()
+            # print "Round %d\n" % (job)
+            # print "Waiting for message...\n"
+            # lock.release()
+            queue.get()  # just an abused thing
+            guest.progress.configure(value=job)
+            # lock.acquire()
+            # print "Got message, filled progressbar to %d" % (job)
+            # lock.release()
         # Properly close and end all processes, once we're done
         pool.close()
         pool.join()
@@ -1195,7 +1237,7 @@ class CalculateM(object):
 
     # Function to be called for multiple particles in 2D mode
     # Receives all parameters needed in a list: indata
-    def calculate_m(self, lock, indata):
+    def calculate_m(self, lock, queue, indata):
         # This might print oddly as we haven't applied any locks
         lock.acquire()
         print 'Reading values and calling Octave'
@@ -1207,11 +1249,12 @@ class CalculateM(object):
         lock.acquire()
         print 'Done! Data from Octave available'
         lock.release()
+        queue.put("Finished!")
         return [Calculate.y, Calculate.y2]
 
     # Function to be called for multiple particles in 3D mode
     # Receives all parameters needed in a list: indata
-    def calculate_m3d(self, lock, indata):
+    def calculate_m3d(self, lock, queue, indata):
         # This might print oddly as there are no locks used
         lock.acquire()
         print 'Reading values and calling Octave'
@@ -1223,7 +1266,9 @@ class CalculateM(object):
         lock.acquire()
         print 'Done! Data from Octave available'
         lock.release()
+        queue.put("Finished!")
         return [Calculate.y, Calculate.y2]
+
 
 # class CalculateM(object):
 
